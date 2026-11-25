@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socialmesh/providers/app_providers.dart'
     show bugReportServiceProvider, settingsServiceProvider;
@@ -64,6 +65,13 @@ void main() {
     await service.initialize();
     return service;
   }
+
+  test('samples at the UI rate, not the 50-a-second game rate', () {
+    expect(
+      BugReportService.shakeSamplingPeriod,
+      greaterThanOrEqualTo(SensorInterval.uiInterval),
+    );
+  });
 
   test('does not subscribe when shake-to-report is disabled', () async {
     final service = await buildService(shakeEnabled: false);

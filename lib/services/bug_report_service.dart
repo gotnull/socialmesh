@@ -45,6 +45,14 @@ class BugReportService with WidgetsBindingObserver {
   static const int _requiredShakeCount = 2;
   static const Duration _shakeWindow = Duration(milliseconds: 600);
 
+  /// How often the accelerometer reports while the app is open. Every
+  /// sample crosses the platform channel into Dart, so the game rate
+  /// (50 a second) cost battery the whole time for a gesture used rarely.
+  /// A deliberate shake stays above the threshold for longer than this
+  /// interval, so two strokes inside [_shakeWindow] are still caught.
+  @visibleForTesting
+  static const Duration shakeSamplingPeriod = SensorInterval.uiInterval;
+
   Future<void> initialize() async {
     final settings = await ref.read(settingsServiceProvider.future);
     _enabled = settings.shakeToReportEnabled;
@@ -83,7 +91,7 @@ class BugReportService with WidgetsBindingObserver {
   void _startListening() {
     _accelerometerSub?.cancel();
     _accelerometerSub = accelerometerEventStream(
-      samplingPeriod: const Duration(milliseconds: 20),
+      samplingPeriod: shakeSamplingPeriod,
     ).listen(_handleAccel);
   }
 

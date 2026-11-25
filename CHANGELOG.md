@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - While the Devices screen is still searching, it says it is looking for Meshtastic and MeshCore radios when MeshCore support is on, instead of Meshtastic devices only.
 - Connecting to a radio, or an MQTT feed, that reports thousands of nodes no longer freezes the app. NodeDex linked every recently heard node to every other, copying each node's links per pair, so a node database of 20,000 froze the app for minutes while its memory climbed; it now links the 64 most recently heard nodes in each window and keeps each node's 256 strongest links. Node names from a large node database are also saved in batches rather than one full rewrite per node. A first connect to a 20,000-node radio now finishes in about 15 seconds.
 - Counts of 1,000 or more show a thousands separator in your language, such as Nodes (20,004).
+- Shake to report a bug samples the phone's motion sensor about 15 times a second instead of 50 while the app is open, so it uses less battery. A firm shake still opens the report.
 
 ## [1.83.1] - 2026-11-25
 
