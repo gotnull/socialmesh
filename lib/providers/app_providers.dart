@@ -5929,8 +5929,40 @@ class MessagesNotifier extends Notifier<List<Message>> {
         return;
       }
     }
-    state = state.map((m) => m.id == messageId ? updatedMessage : m).toList();
-    _storage?.saveMessage(updatedMessage);
+    _replaceMessage(messageId, updatedMessage);
+  }
+
+  /// Starts a user-requested resend of [messageId] with [resending].
+  ///
+  /// Unlike [updateMessage] this may move the message off delivered, but
+  /// only when a relay alone acknowledged it (`realAck == false`): such a DM
+  /// is offered for resend, and the attempt must show. A DM the recipient
+  /// confirmed, or one with an unknown ack kind, is never regressed.
+  /// Returns false when the resend was refused.
+  bool beginResend(String messageId, Message resending) {
+    if (!ref.mounted) {
+      AppLogging.messages(
+        'beginResend: notifier rebuilt, dropping resend for $messageId',
+      );
+      return false;
+    }
+    final current = state.firstWhereOrNull((m) => m.id == messageId);
+    if (current != null &&
+        current.status == MessageStatus.delivered &&
+        current.realAck != false) {
+      AppLogging.messages(
+        'beginResend: $messageId already confirmed by the recipient, '
+        'not resending',
+      );
+      return false;
+    }
+    _replaceMessage(messageId, resending);
+    return true;
+  }
+
+  void _replaceMessage(String messageId, Message message) {
+    state = state.map((m) => m.id == messageId ? message : m).toList();
+    _storage?.saveMessage(message);
   }
 
   /// Mark all incoming messages from a specific node as read (for DM conversations).

@@ -102,7 +102,7 @@ class DmRetryCoordinator {
     // A relay-acknowledged DM arrives here as delivered with acked=true and
     // realAck=false; clear both so the new attempt starts from a clean
     // acknowledgement state instead of carrying the relay's tick forward.
-    notifier.updateMessage(
+    final started = notifier.beginResend(
       message.id,
       message.copyWith(
         status: MessageStatus.retrying,
@@ -114,6 +114,7 @@ class DmRetryCoordinator {
         clearRealAck: true,
       ),
     );
+    if (!started) return;
 
     await _dispatchSend(message.id);
   }

@@ -163,6 +163,65 @@ void main() {
     h.container.dispose();
   });
 
+  test('resend of a relay-only acked DM leaves delivered', () async {
+    final h = await _makeHarness();
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.addMessage(_pendingDm(id: 'r1', packetId: 901));
+    notifier.trackPacket(901, 'r1');
+    h.protocol.emit(
+      MessageDeliveryUpdate(packetId: 901, delivered: true, realAck: false),
+    );
+    await _pump(h.container);
+    final relayAcked = h.container
+        .read(messagesProvider)
+        .firstWhere((m) => m.id == 'r1');
+    expect(relayAcked.canResend, isTrue);
+
+    await h.container
+        .read(dmRetryCoordinatorProvider)
+        .scheduleResend(relayAcked);
+    await _pump(h.container);
+
+    // The test radio is not ready, so the attempt fails and falls back to
+    // unconfirmed; what matters is that it no longer reads as delivered.
+    final after = h.container
+        .read(messagesProvider)
+        .firstWhere((m) => m.id == 'r1');
+    expect(after.status, MessageStatus.unconfirmed);
+    expect(after.retryCount, 1);
+    expect(after.realAck, isNull);
+    h.container.dispose();
+  });
+
+  test('resend never regresses a recipient-acked DM', () async {
+    final h = await _makeHarness();
+    final notifier = h.container.read(messagesProvider.notifier);
+    notifier.addMessage(_pendingDm(id: 'r2', packetId: 902));
+    notifier.trackPacket(902, 'r2');
+    final staleUnconfirmed = h.container
+        .read(messagesProvider)
+        .firstWhere((m) => m.id == 'r2')
+        .copyWith(status: MessageStatus.unconfirmed);
+    h.protocol.emit(
+      MessageDeliveryUpdate(packetId: 902, delivered: true, realAck: true),
+    );
+    await _pump(h.container);
+
+    // The bubble was built before the recipient's ack arrived.
+    await h.container
+        .read(dmRetryCoordinatorProvider)
+        .scheduleResend(staleUnconfirmed);
+    await _pump(h.container);
+
+    final after = h.container
+        .read(messagesProvider)
+        .firstWhere((m) => m.id == 'r2');
+    expect(after.status, MessageStatus.delivered);
+    expect(after.realAck, isTrue);
+    expect(after.retryCount, 0);
+    h.container.dispose();
+  });
+
   test('explicit recipient ack marks DM delivered with realAck=true', () async {
     final h = await _makeHarness();
     final notifier = h.container.read(messagesProvider.notifier);
