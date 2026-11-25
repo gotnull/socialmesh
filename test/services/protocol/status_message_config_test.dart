@@ -99,6 +99,13 @@ void main() {
             ..longName = 'Bench'
             ..shortName = 'BN')),
     );
+    // Under a loaded suite this radio's NodeInfo can still be in flight
+    // when a test starts, and would then replace the node a test just set.
+    final deadline = DateTime.now().add(const Duration(seconds: 5));
+    while (protocol.nodes[_myNodeNum]?.longName != 'Bench' &&
+        DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
     protocol.debugForceReadinessForTesting(OperationalReadiness.ready);
   });
 
