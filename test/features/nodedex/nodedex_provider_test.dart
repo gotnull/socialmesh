@@ -996,6 +996,31 @@ void main() {
       },
     );
 
+    test('a window of thousands links only the most recent and stays '
+        'fast', () async {
+      final ctx = _createTestContainer(preInitStore: preInitStore);
+      addTearDown(ctx.container.dispose);
+      await _initProvider(ctx.container);
+
+      const count = 2000;
+      ctx.nodesNotifier.setNodes({
+        for (var i = 1; i <= count; i++) i: _makeNode(i),
+      });
+      await _pumpEventQueue();
+
+      final stopwatch = Stopwatch()..start();
+      ctx.container.read(nodeDexProvider.notifier).flushCoSeenForTest();
+      stopwatch.stop();
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 2)));
+
+      final state = ctx.container.read(nodeDexProvider);
+      final linked = state.values.where((e) => e.coSeenNodes.isNotEmpty);
+      expect(linked.length, kMaxCoSeenNodesPerFlush);
+      for (final entry in linked) {
+        expect(entry.coSeenNodes.length, kMaxCoSeenNodesPerFlush - 1);
+      }
+    });
+
     test('co-seen flush is bidirectional', () async {
       final ctx = _createTestContainer(preInitStore: preInitStore);
       addTearDown(ctx.container.dispose);

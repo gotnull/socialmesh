@@ -1189,19 +1189,42 @@ class NodeDexEntry {
     );
   }
 
-  /// Register a co-seen relationship with another node.
-  ///
-  /// If this is the first time the pair has been co-seen, creates a
-  /// new [CoSeenRelationship]. Otherwise, increments the existing
-  /// relationship's count and updates its lastSeen timestamp.
-  NodeDexEntry addCoSeen(int otherNodeNum, {DateTime? timestamp}) {
-    if (otherNodeNum == nodeNum) return this;
+  /// Most co-seen relationships one entry keeps. Past this, the weakest
+  /// (fewest sightings, then oldest) are dropped, so a node on a mesh of
+  /// thousands cannot grow a relationship map of thousands.
+  static const int maxCoSeenRelationships = 256;
+
+  /// Records one co-sighting with each of [otherNodeNums], copying the
+  /// relationship map once rather than once per node, then trims it to
+  /// [maxCoSeenRelationships].
+  NodeDexEntry addCoSeenMany(
+    Iterable<int> otherNodeNums, {
+    DateTime? timestamp,
+  }) {
     final updated = Map<int, CoSeenRelationship>.from(coSeenNodes);
-    final existing = updated[otherNodeNum];
-    if (existing != null) {
-      updated[otherNodeNum] = existing.recordSighting(timestamp: timestamp);
-    } else {
-      updated[otherNodeNum] = CoSeenRelationship.initial(timestamp: timestamp);
+    var added = false;
+    for (final other in otherNodeNums) {
+      if (other == nodeNum) continue;
+      final existing = updated[other];
+      updated[other] = existing == null
+          ? CoSeenRelationship.initial(timestamp: timestamp)
+          : existing.recordSighting(timestamp: timestamp);
+      added = true;
+    }
+    if (!added) return this;
+    if (updated.length > maxCoSeenRelationships) {
+      final weakestFirst = updated.entries.toList()
+        ..sort((a, b) {
+          final byCount = a.value.count.compareTo(b.value.count);
+          return byCount != 0
+              ? byCount
+              : a.value.lastSeen.compareTo(b.value.lastSeen);
+        });
+      for (final e in weakestFirst.take(
+        updated.length - maxCoSeenRelationships,
+      )) {
+        updated.remove(e.key);
+      }
     }
     return copyWith(coSeenNodes: updated);
   }

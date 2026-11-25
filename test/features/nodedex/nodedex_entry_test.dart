@@ -825,7 +825,7 @@ void main() {
         final now = DateTime.now();
         final entry = NodeDexEntry(nodeNum: 1, firstSeen: now, lastSeen: now);
 
-        final updated = entry.addCoSeen(2, timestamp: now);
+        final updated = entry.addCoSeenMany([2], timestamp: now);
 
         expect(updated.coSeenNodes.containsKey(2), isTrue);
         expect(updated.coSeenNodes[2]!.count, equals(1));
@@ -842,7 +842,7 @@ void main() {
           coSeenNodes: {2: CoSeenRelationship.initial(timestamp: t1)},
         );
 
-        final updated = entry.addCoSeen(2, timestamp: t2);
+        final updated = entry.addCoSeenMany([2], timestamp: t2);
 
         expect(updated.coSeenNodes[2]!.count, equals(2));
         expect(updated.coSeenNodes[2]!.firstSeen, equals(t1));
@@ -853,9 +853,38 @@ void main() {
         final now = DateTime.now();
         final entry = NodeDexEntry(nodeNum: 1, firstSeen: now, lastSeen: now);
 
-        final updated = entry.addCoSeen(1);
+        final updated = entry.addCoSeenMany([1]);
 
         expect(updated.coSeenNodes.isEmpty, isTrue);
+      });
+
+      test('records several nodes in one call and skips self', () {
+        final now = DateTime(2026, 11, 25, 15);
+        final entry = NodeDexEntry(nodeNum: 1, firstSeen: now, lastSeen: now);
+        final updated = entry.addCoSeenMany([1, 2, 3, 4], timestamp: now);
+        expect(updated.coSeenNodes.keys.toSet(), {2, 3, 4});
+      });
+
+      test('keeps the strongest relationships past the cap', () {
+        final old = DateTime(2026, 11, 1);
+        final now = DateTime(2026, 11, 25, 15);
+        const cap = NodeDexEntry.maxCoSeenRelationships;
+        final entry = NodeDexEntry(
+          nodeNum: 1,
+          firstSeen: old,
+          lastSeen: old,
+          coSeenNodes: {
+            // Strong: seen five times. Weak: once, long ago.
+            2: CoSeenRelationship(count: 5, firstSeen: old, lastSeen: old),
+            for (var i = 10; i < 10 + cap; i++)
+              i: CoSeenRelationship.initial(timestamp: old),
+          },
+        );
+        final updated = entry.addCoSeenMany([5000, 5001], timestamp: now);
+        expect(updated.coSeenNodes.length, cap);
+        expect(updated.coSeenNodes.containsKey(2), isTrue);
+        expect(updated.coSeenNodes.containsKey(5000), isTrue);
+        expect(updated.coSeenNodes.containsKey(5001), isTrue);
       });
 
       test('preserves other co-seen relationships when adding new one', () {
@@ -867,7 +896,7 @@ void main() {
           coSeenNodes: {2: CoSeenRelationship.initial(timestamp: now)},
         );
 
-        final updated = entry.addCoSeen(3, timestamp: now);
+        final updated = entry.addCoSeenMany([3], timestamp: now);
 
         expect(updated.coSeenNodes.containsKey(2), isTrue);
         expect(updated.coSeenNodes.containsKey(3), isTrue);

@@ -790,8 +790,24 @@ class NodeIdentityNotifier extends Notifier<Map<int, NodeIdentity>> {
   bool _loaded = false;
   final Set<int> _bleStripLoggedNodes = {};
 
+  // One identity arrives per NodeInfo, and a radio replaying a large node
+  // database sends thousands back to back. Each state change makes the
+  // node list re-merge every node, so updates are applied in batches.
+  static const Duration _batchWindow = Duration(milliseconds: 100);
+  final List<NodeIdentityUpdate> _pending = [];
+  Completer<void>? _batchDone;
+  Timer? _batchTimer;
+  Future<void> _applying = Future.value();
+
   @override
   Map<int, NodeIdentity> build() {
+    ref.onDispose(() {
+      _batchTimer?.cancel();
+      _batchTimer = null;
+      _pending.clear();
+      _batchDone?.complete();
+      _batchDone = null;
+    });
     final storeAsync = ref.watch(nodeIdentityStoreProvider);
     _store = storeAsync.value;
     if (!_loaded && _store != null) {
@@ -869,19 +885,40 @@ class NodeIdentityNotifier extends Notifier<Map<int, NodeIdentity>> {
     String? shortName,
     int? updatedAtMs,
     int? lastSeenAtMs,
-  }) async {
-    if (_store == null) return;
-    final updated = await _store!.upsert(
-      current: state,
+  }) {
+    if (_store == null) return Future.value();
+    _pending.add((
       nodeNum: nodeNum,
       longName: longName,
       shortName: shortName,
       updatedAtMs: updatedAtMs,
       lastSeenAtMs: lastSeenAtMs,
-    );
-    if (!identical(updated, state)) {
-      state = updated;
-    }
+    ));
+    final done = _batchDone ??= Completer<void>();
+    _batchTimer ??= Timer(_batchWindow, _scheduleBatch);
+    return done.future;
+  }
+
+  // Batches apply one after another, so a batch never starts from a state
+  // an earlier, still-saving batch is about to replace.
+  void _scheduleBatch() {
+    final batch = List.of(_pending);
+    _pending.clear();
+    final done = _batchDone;
+    _batchDone = null;
+    _batchTimer = null;
+    _applying = _applying.then((_) async {
+      try {
+        final store = _store;
+        if (store == null || !ref.mounted) return;
+        final updated = await store.upsertMany(current: state, updates: batch);
+        if (ref.mounted && !identical(updated, state)) state = updated;
+      } on Exception catch (e) {
+        AppLogging.nodes('NODE_IDENTITY: batch of ${batch.length} failed: $e');
+      } finally {
+        if (!(done?.isCompleted ?? true)) done!.complete();
+      }
+    });
   }
 }
 

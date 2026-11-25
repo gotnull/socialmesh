@@ -139,7 +139,14 @@ void main() {
     expect(node, isNotNull);
     expect(node?.displayName, 'Wismesh');
 
-    final identities = await identityStore.getAllIdentities();
+    // Identity upserts are applied in batches, so the store is written a
+    // moment after the packet rather than within the same microtask.
+    final deadline = DateTime.now().add(const Duration(seconds: 5));
+    var identities = await identityStore.getAllIdentities();
+    while (identities[0x5ed6] == null && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      identities = await identityStore.getAllIdentities();
+    }
     expect(identities[0x5ed6]?.longName, 'Wismesh');
   });
 }

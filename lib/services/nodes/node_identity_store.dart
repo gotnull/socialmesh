@@ -8,6 +8,15 @@ import '../../core/logging.dart';
 import '../../core/radio_scope.dart';
 import '../../utils/text_sanitizer.dart';
 
+/// One identity change, as `NodeIdentityStore.upsertMany` applies it.
+typedef NodeIdentityUpdate = ({
+  int nodeNum,
+  String? longName,
+  String? shortName,
+  int? updatedAtMs,
+  int? lastSeenAtMs,
+});
+
 class NodeIdentity {
   final int nodeNum;
   final String? longName;
@@ -159,7 +168,44 @@ class NodeIdentityStore {
     String? shortName,
     int? updatedAtMs,
     int? lastSeenAtMs,
+  }) => upsertMany(
+    current: current,
+    updates: [
+      (
+        nodeNum: nodeNum,
+        longName: longName,
+        shortName: shortName,
+        updatedAtMs: updatedAtMs,
+        lastSeenAtMs: lastSeenAtMs,
+      ),
+    ],
+  );
+
+  /// Applies [updates] in order with one copy of [current] and one save.
+  /// A radio replaying a large node database sends one identity per node,
+  /// and saving the whole map once per node made the replay quadratic.
+  /// Returns [current] itself when nothing changed.
+  Future<Map<int, NodeIdentity>> upsertMany({
+    required Map<int, NodeIdentity> current,
+    required List<NodeIdentityUpdate> updates,
   }) async {
+    Map<int, NodeIdentity>? next;
+    for (final update in updates) {
+      final merged = _merge(next ?? current, update);
+      if (merged == null) continue;
+      (next ??= Map<int, NodeIdentity>.from(current))[update.nodeNum] = merged;
+    }
+    if (next == null) return current;
+    await saveAllIdentities(next);
+    return next;
+  }
+
+  NodeIdentity? _merge(Map<int, NodeIdentity> current, NodeIdentityUpdate u) {
+    final nodeNum = u.nodeNum;
+    final longName = u.longName;
+    final shortName = u.shortName;
+    final updatedAtMs = u.updatedAtMs;
+    final lastSeenAtMs = u.lastSeenAtMs;
     var normalizedLong = normalizeName(longName);
     var normalizedShort = normalizeName(shortName);
     if (normalizedLong != null && _isBleDefaultName(normalizedLong)) {
@@ -184,7 +230,7 @@ class NodeIdentityStore {
         normalizedLong == null &&
         normalizedShort == null &&
         lastSeenAtMs == null) {
-      return current;
+      return null;
     }
 
     // Determine effective new values
@@ -197,10 +243,9 @@ class NodeIdentityStore {
         existing.longName == effectiveLong &&
         existing.shortName == effectiveShort &&
         existing.lastSeenAt == effectiveSeenAt) {
-      return current;
+      return null;
     }
 
-    final next = Map<int, NodeIdentity>.from(current);
     final merged =
         (existing ??
                 NodeIdentity(
@@ -217,9 +262,6 @@ class NodeIdentityStore {
               lastSeenAt: effectiveSeenAt,
             );
 
-    next[nodeNum] = merged;
-    await saveAllIdentities(next);
-
     if (normalizedLong != null || normalizedShort != null) {
       AppLogging.protocol(
         'NODE_IDENTITY_UPSERT node=!${nodeNum.toRadixString(16).toUpperCase().padLeft(4, '0')} '
@@ -228,6 +270,6 @@ class NodeIdentityStore {
       );
     }
 
-    return next;
+    return merged;
   }
 }

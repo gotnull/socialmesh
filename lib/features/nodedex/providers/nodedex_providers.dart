@@ -54,6 +54,11 @@ import 'package:socialmesh/l10n/l10n_utils.dart';
 import '../../../providers/radio_scope_providers.dart';
 
 const Duration _kCoSeenRecentActivityWindow = Duration(minutes: 30);
+
+/// Most nodes linked to each other in one co-seen flush: 2,016 pairs at
+/// most, however many nodes were heard in the window.
+@visibleForTesting
+const int kMaxCoSeenNodesPerFlush = 64;
 const double _kCoSeenMaxPlausibleDistanceMeters = 100000.0;
 
 /// Maximum age of a node's `lastHeard` before its update is treated as a
@@ -1018,34 +1023,31 @@ class NodeDexNotifier extends Notifier<Map<int, NodeDexEntry>> {
     }
 
     final flushTimestamp = clock.now();
-    final nodeList = _sessionSeenNodes.toList();
+    // Every pair is linked, so the work is quadratic in the nodes seen. A
+    // window on a busy mesh can hold thousands, which froze the app; only
+    // the most recently encountered take part.
+    final nodeList = _sessionSeenNodes.toList()
+      ..sort(
+        (a, b) => (_lastEncounterTime[b] ?? flushTimestamp).compareTo(
+          _lastEncounterTime[a] ?? flushTimestamp,
+        ),
+      );
+    final linked = nodeList.take(kMaxCoSeenNodesPerFlush).toList();
     final updated = Map<int, NodeDexEntry>.from(source);
     var changed = false;
 
-    for (int i = 0; i < nodeList.length; i++) {
-      for (int j = i + 1; j < nodeList.length; j++) {
-        final a = nodeList[i];
-        final b = nodeList[j];
-
-        final entryA = updated[a];
-        final entryB = updated[b];
-
-        if (entryA != null) {
-          updated[a] = entryA.addCoSeen(b, timestamp: flushTimestamp);
-          changed = true;
-        }
-        if (entryB != null) {
-          updated[b] = entryB.addCoSeen(a, timestamp: flushTimestamp);
-          changed = true;
-        }
-      }
+    for (final nodeNum in linked) {
+      final entry = updated[nodeNum];
+      if (entry == null) continue;
+      updated[nodeNum] = entry.addCoSeenMany(linked, timestamp: flushTimestamp);
+      changed = true;
     }
 
     if (changed) {
-      final pairCount = (nodeList.length * (nodeList.length - 1)) ~/ 2;
+      final pairCount = (linked.length * (linked.length - 1)) ~/ 2;
       AppLogging.nodeDex(
         'Co-seen flush complete: $pairCount pairs processed '
-        'across ${nodeList.length} nodes',
+        'across ${linked.length} of ${nodeList.length} nodes',
       );
       if (!persistOnly) {
         state = updated;

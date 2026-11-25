@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resend now works on a direct message that only a relay node acknowledged. Tapping it used to do nothing visible: the message went out again, but its bubble kept showing the relay's tick. It now shows the new attempt and its outcome. A message the recipient has already confirmed is never sent again.
 - After you disconnect from a MeshCore radio over Bluetooth, the Devices screen lists it as MeshCore straight away. It briefly showed a Meshtastic badge until the scan found the radio, and tapping it in that moment tried a Meshtastic connection.
 - While the Devices screen is still searching, it says it is looking for Meshtastic and MeshCore radios when MeshCore support is on, instead of Meshtastic devices only.
+- Connecting to a radio, or an MQTT feed, that reports thousands of nodes no longer freezes the app. NodeDex linked every recently heard node to every other, copying each node's links per pair, so a node database of 20,000 froze the app for minutes while its memory climbed; it now links the 64 most recently heard nodes in each window and keeps each node's 256 strongest links. Node names from a large node database are also saved in batches rather than one full rewrite per node. A first connect to a 20,000-node radio now finishes in about 15 seconds.
+- Counts of 1,000 or more show a thousands separator in your language, such as Nodes (20,004).
 
 ## [1.83.1] - 2026-11-25
 

@@ -24,7 +24,8 @@
     "description": "Channels notice for distinct unreviewed Mesh Beacon offers",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -54,7 +55,8 @@
   "@nodedexIdentityChangedBannerTitle": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Banner title on the node detail screen when a node has had identity rotations. {count} is the total number of rotations recorded."
@@ -154,7 +156,8 @@
     "description": "Value text for the reception count (e.g. '5 reported')",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -426,7 +429,8 @@
     "description": "Total airport count shown before searching",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -451,7 +455,8 @@
     "description": "Search result count (singular/plural)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1320,7 +1325,8 @@
     "description": "Relative date label for days ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1329,7 +1335,8 @@
     "description": "Relative time: months ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1342,7 +1349,8 @@
     "description": "Relative time: weeks ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1768,7 +1776,8 @@
     "description": "Channel count label in the picker; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1992,7 +2001,8 @@
     "description": "Sound count label in the picker; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2041,7 +2051,8 @@
     "description": "Action count chip label on the card; {count} is the number, {s} is plural suffix",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "s": {
         "type": "String"
@@ -2053,7 +2064,8 @@
     "description": "Relative timestamp for days ago; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2062,7 +2074,8 @@
     "description": "Relative timestamp for hours ago; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2075,7 +2088,8 @@
     "description": "Relative timestamp for minutes ago; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2084,7 +2098,8 @@
     "description": "Run count label on the card; {count} is the trigger count",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2093,7 +2108,8 @@
     "description": "Relative timestamp for weeks ago; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2210,7 +2226,8 @@
     "description": "Label for ELSE actions in import preview",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2219,7 +2236,8 @@
     "description": "Label for THEN actions in import preview",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2268,7 +2286,8 @@
     "description": "Condition count display in automation card",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2453,7 +2472,8 @@
     "description": "Node count label in flow editor; {count} is the number of nodes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2474,7 +2494,8 @@
     "description": "Toolbar button label for deleting selected nodes; {count} is the selection count",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2515,7 +2536,8 @@
     "description": "Section label in import preview; {count} is the number of conditions",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2524,7 +2546,8 @@
     "description": "Summary text showing condition count; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2632,7 +2655,8 @@
     "description": "Relative timestamp for events days ago; {count} is the number of days",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2692,7 +2716,8 @@
     "description": "Relative timestamp for events hours ago; {count} is the number of hours",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2709,7 +2734,8 @@
     "description": "Relative timestamp for events minutes ago; {count} is the number of minutes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -2986,7 +3012,8 @@
     "description": "Interval description when less than 60 minutes; {count} is the number",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4148,7 +4175,8 @@
   "@channelsScreenTitle": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Title for channel configuration Parameters: {count} = numeric count."
@@ -4234,7 +4262,8 @@
     "description": "Relative time label for minutes ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4243,7 +4272,8 @@
     "description": "Relative time label for hours ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4252,7 +4282,8 @@
     "description": "Relative time label for days ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4261,7 +4292,8 @@
     "description": "Singular label for hop count.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4270,7 +4302,8 @@
     "description": "Plural label for hop count.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4400,7 +4433,8 @@
     "description": "Count of nodes assigned to a group.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4417,7 +4451,8 @@
     "description": "Bottom action button on the group members screen that removes the selected nodes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4426,7 +4461,8 @@
     "description": "Confirmation body when removing nodes from a group.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "group": {
         "type": "String"
@@ -4688,7 +4724,8 @@
     "description": "Device log entry count subtitle",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -4725,7 +4762,8 @@
     "description": "Log entry count label",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -5643,7 +5681,8 @@
     "description": "Count of discovered nodes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6256,7 +6295,8 @@
     "description": "Success snackbar (interpolated)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6269,7 +6309,8 @@
     "description": "Relative time: days ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6310,7 +6351,8 @@
     "description": "Relative time: hours ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6323,7 +6365,8 @@
     "description": "Relative time: minutes ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6403,7 +6446,8 @@
     "description": "Success snackbar (interpolated)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6587,7 +6631,8 @@
     "description": "Transfer card relative time - N minutes ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6596,7 +6641,8 @@
     "description": "Transfer card relative time - N hours ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6605,7 +6651,8 @@
     "description": "Transfer card relative time - N days ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6747,7 +6794,8 @@
     "description": "Truncation indicator in hex viewer (interpolated)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6837,7 +6885,8 @@
     "description": "Transfer duration formatted in seconds",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6846,7 +6895,8 @@
     "description": "Transfer duration formatted in minutes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6929,7 +6979,8 @@
     "description": "Label showing line count in file preview",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6942,7 +6993,8 @@
     "description": "Number of files in an archive",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6951,7 +7003,8 @@
     "description": "Summary count of image entries in archive",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6960,7 +7013,8 @@
     "description": "Summary count of voice/audio entries in archive",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6969,7 +7023,8 @@
     "description": "Summary count of text/config entries in archive",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6978,7 +7033,8 @@
     "description": "Summary count of other supported entries in archive",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -6987,7 +7043,8 @@
     "description": "Summary count of unsupported entries in archive",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -7414,7 +7471,8 @@
   "@gpsStatusDaysAgo": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: gps status days ago Parameters: {count} = numeric count."
@@ -7459,7 +7517,8 @@
   "@gpsStatusHoursAgo": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: gps status hours ago Parameters: {count} = numeric count."
@@ -7494,7 +7553,8 @@
   "@gpsStatusMinutesAgo": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: gps status minutes ago Parameters: {count} = numeric count."
@@ -7535,7 +7595,8 @@
   "@gpsStatusSatellitesCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: gps status satellites count Parameters: {count} = numeric count."
@@ -7552,7 +7613,8 @@
   "@gpsStatusSecondsAgo": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: gps status seconds ago Parameters: {count} = numeric count."
@@ -7828,11 +7890,13 @@
     "placeholders": {
       "completed": {
         "type": "int",
-        "description": "Number of completed tours."
+        "description": "Number of completed tours.",
+        "format": "decimalPattern"
       },
       "total": {
         "type": "int",
-        "description": "Total number of tours."
+        "description": "Total number of tours.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -9010,7 +9074,8 @@
     "description": "Title of the bottom sheet shown when tapping a cluster on the map.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -9039,7 +9104,8 @@
     "description": "Summary line showing how many items the user has hidden.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -9162,7 +9228,8 @@
   "@mapTakEntityCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in map view Parameters: {count} = numeric count."
@@ -9249,7 +9316,8 @@
     "description": "Issue count badge label",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -10017,7 +10085,8 @@
     "description": "D49-D3 - byte count under the hex output",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -10095,10 +10164,12 @@
     "description": "D49-C - summary snackbar after save",
     "placeholders": {
       "saved": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -10107,7 +10178,8 @@
     "description": "D49-C - summary snackbar after refresh-all",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -10153,10 +10225,12 @@
     "description": "D49-D1 - summary snackbar when save partially times out; advises re-login",
     "placeholders": {
       "saved": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -11000,7 +11074,8 @@
   "@meshcoreConsoleFramesCaptured": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in MeshCore protocol Parameters: {count} = numeric count."
@@ -11057,7 +11132,8 @@
     "description": "Legend contact count (singular)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -11066,7 +11142,8 @@
     "description": "Legend contact count (plural)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -11368,7 +11445,8 @@
         "type": "int"
       },
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -11594,7 +11672,8 @@
     "description": "D34c-B-B - parsed-bytes preview line under the input",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "bytes": {
         "type": "String"
@@ -11631,7 +11710,8 @@
     "description": "D34c-B-B - inline error for >64 hops",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -12587,7 +12667,8 @@
     "description": "Contact detail tile subtitle showing the saved path count",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -12634,7 +12715,8 @@
     "description": "Path history row header showing the hop count",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -12867,7 +12949,8 @@
     "description": "D-Q5 - header entry count badge",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -13491,7 +13574,8 @@
     "description": "Routing path label: hop count for an auto-discovered direct route",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -13500,7 +13584,8 @@
     "description": "Routing path label: user-forced hop count (overrides auto-discovered path)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -14372,7 +14457,8 @@
     "description": "Relative time format for days ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -14381,7 +14467,8 @@
     "description": "Relative time format for hours ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -14390,7 +14477,8 @@
     "description": "Relative time format for minutes ago",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -14435,7 +14523,8 @@
     "description": "D28 - Snackbar after copying the frame log to clipboard.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -14556,7 +14645,8 @@
     "description": "D28 - Hop count summary on the trace result.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -14763,7 +14853,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "The number of contacts."
+        "description": "The number of contacts.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15030,7 +15121,8 @@
     "description": "Shows current retry attempt count vs maximum.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "max": {
         "type": "int"
@@ -15051,7 +15143,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "The number of messages that match the current search query."
+        "description": "The number of messages that match the current search query.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15112,7 +15205,8 @@
     "description": "Hop count label shown in inline technical info on message bubbles.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15654,7 +15748,8 @@
     "description": "MeshCanvas viewer HUD label when one or more paints are queued in flight but the wire is moving normally.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15671,7 +15766,8 @@
     "description": "Tooltip for the queued state of the MeshCanvas viewer transmission HUD.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15732,7 +15828,8 @@
     "description": "Uppercase painted-cell count stat in the MeshCanvas viewer vitals bar.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15741,7 +15838,8 @@
     "description": "Uppercase live-peer count stat in the MeshCanvas viewer vitals bar. Only shown for mesh canvases.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15824,7 +15922,8 @@
     "description": "Painted-cell count fragment on a canvas card. Renders inside a middle-dot metadata cluster ('17 painted · 2h ago'). Excludes default-color cells.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15917,7 +16016,8 @@
     "description": "Status chip in the Mesh tab hero stats card showing how many Meshtastic channels are configured / surfaced as latent canvases.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15926,7 +16026,8 @@
     "description": "Status chip in the Mesh tab hero stats card showing how many of the configured channels have a materialised canvas with at least one painted cell.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15943,7 +16044,8 @@
     "description": "Pill label on the canvas HUD presence strip when no one is painting. Mesh-native tone. Singular form is special-cased so we never render '1 radios'. Banned: SaaS collaboration vocabulary (users / collaborate / community / online / active members).",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15952,7 +16054,8 @@
     "description": "Count-only pill label used in the tight-width collapse mode of the canvas HUD presence strip. Numeric only; avatars still convey the 'here' meaning visually.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -15961,7 +16064,8 @@
     "description": "Pill label when at least one peer is painting. 'painting' is a verb/state so it stays singular for all values of {painting} (e.g., '1 here · 1 painting', '6 here · 2 painting'). Separator is U+00B7 middle dot; never em-dash. Mesh-native register.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "painting": {
         "type": "int"
@@ -15973,7 +16077,8 @@
     "description": "Tight-width pill label when at least one peer is painting. Numeric only.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "painting": {
         "type": "int"
@@ -16050,7 +16155,8 @@
     "description": "Thread count display.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16059,7 +16165,8 @@
     "description": "Reply count display.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16100,7 +16207,8 @@
     "description": "Section count display.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16145,7 +16253,8 @@
     "description": "Time-ago label for events in the last hour.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16154,7 +16263,8 @@
     "description": "Time-ago label for events in the last day.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16163,7 +16273,8 @@
     "description": "Time-ago label for events in the last month.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16172,7 +16283,8 @@
     "description": "Time-ago label for events in the last year.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16181,7 +16293,8 @@
     "description": "Time-ago label for events more than a year ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -16358,7 +16471,8 @@
   "@nodeAnalyticsDirectNeighbors": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -16401,7 +16515,8 @@
   "@nodeAnalyticsExportRecordCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -16527,7 +16642,8 @@
   "@nodeAnalyticsSeenByGateways": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -17743,7 +17859,8 @@
   "@nodeIntelligenceGatewayCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -17776,7 +17893,8 @@
   "@nodeIntelligenceNeighborCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -17797,7 +17915,8 @@
   "@nodedexActiveDaysOf14": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18007,7 +18126,8 @@
   "@nodedexCollectedCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18037,7 +18157,8 @@
   "@nodedexConstellationLinkCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18050,7 +18171,8 @@
   "@nodedexConstellationNodeCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18440,7 +18562,8 @@
     "description": "Label showing number of encounters with a node",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -18452,7 +18575,8 @@
   "@nodedexEncountersCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18491,7 +18615,8 @@
   "@nodedexEvidenceCoSeenWith": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18500,7 +18625,8 @@
   "@nodedexEvidenceDistinctPositions": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18527,7 +18653,8 @@
   "@nodedexEvidenceEncountersReliable": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18536,7 +18663,8 @@
   "@nodedexEvidenceFewEncountersOverDays": {
     "placeholders": {
       "encounters": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "days": {
         "type": "int"
@@ -18600,7 +18728,8 @@
   "@nodedexEvidenceMessagesExchanged": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18640,7 +18769,8 @@
   "@nodedexEvidencePositionsObserved": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18658,7 +18788,8 @@
   "@nodedexEvidenceSeenAcrossRegions": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18676,7 +18807,8 @@
   "@nodedexEvidenceTotalEncounters": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -18711,7 +18843,8 @@
   "@nodedexFieldNoteAnchor0": {
     "placeholders": {
       "coSeen": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {coSeen}."
@@ -18724,7 +18857,8 @@
   "@nodedexFieldNoteAnchor2": {
     "placeholders": {
       "coSeen": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {coSeen}."
@@ -18745,7 +18879,8 @@
   "@nodedexFieldNoteAnchor6": {
     "placeholders": {
       "coSeen": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {coSeen}."
@@ -18780,7 +18915,8 @@
   "@nodedexFieldNoteBeacon3": {
     "placeholders": {
       "encounters": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {encounters}."
@@ -18810,10 +18946,12 @@
   "@nodedexFieldNoteCourier0": {
     "placeholders": {
       "messages": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "encounters": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {messages}, {encounters}."
@@ -18830,7 +18968,8 @@
   "@nodedexFieldNoteCourier3": {
     "placeholders": {
       "messages": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {messages}."
@@ -18843,7 +18982,8 @@
   "@nodedexFieldNoteCourier5": {
     "placeholders": {
       "messages": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {messages}."
@@ -18901,7 +19041,8 @@
   "@nodedexFieldNoteGhost1": {
     "placeholders": {
       "encounters": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "age": {
         "type": "int"
@@ -18961,7 +19102,8 @@
   "@nodedexFieldNoteRelay5": {
     "placeholders": {
       "encounters": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {encounters}."
@@ -18991,7 +19133,8 @@
   "@nodedexFieldNoteSentinel2": {
     "placeholders": {
       "encounters": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {encounters}."
@@ -19072,7 +19215,8 @@
   "@nodedexFieldNoteWanderer0": {
     "placeholders": {
       "regions": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {regions}."
@@ -19081,7 +19225,8 @@
   "@nodedexFieldNoteWanderer1": {
     "placeholders": {
       "positions": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {positions}."
@@ -19090,7 +19235,8 @@
   "@nodedexFieldNoteWanderer2": {
     "placeholders": {
       "regions": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {regions}."
@@ -19112,7 +19258,8 @@
   "@nodedexFieldNoteWanderer5": {
     "placeholders": {
       "regions": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {regions}."
@@ -19121,7 +19268,8 @@
   "@nodedexFieldNoteWanderer6": {
     "placeholders": {
       "positions": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {positions}."
@@ -19216,7 +19364,8 @@
         "type": "int"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {current}, {total} = numeric count."
@@ -19297,7 +19446,8 @@
   "@nodedexImportButtonLabelPlural": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19306,7 +19456,8 @@
   "@nodedexImportButtonLabelSingular": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19315,7 +19466,8 @@
   "@nodedexImportClassificationConflictPlural": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19324,7 +19476,8 @@
   "@nodedexImportClassificationConflictSingular": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19354,7 +19507,8 @@
   "@nodedexImportEntriesInFile": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19412,7 +19566,8 @@
   "@nodedexImportNoteConflictPlural": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19421,7 +19576,8 @@
   "@nodedexImportNoteConflictSingular": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19478,7 +19634,8 @@
   "@nodedexImportSuccessPlural": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19487,7 +19644,8 @@
   "@nodedexImportSuccessSingular": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19538,7 +19696,8 @@
   "@nodedexLastReadings": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19642,7 +19801,8 @@
   "@nodedexMessagesExchangedCoPresent": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19679,7 +19839,8 @@
   "@nodedexNodeCountPlural": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19688,7 +19849,8 @@
   "@nodedexNodeCountSingular": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -19908,7 +20070,8 @@
     "description": "Count of encounters in a region",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -20057,7 +20220,8 @@
   "@nodedexSeenTogetherCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -20066,7 +20230,8 @@
   "@nodedexSelectedLinksCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -20124,7 +20289,8 @@
   "@nodedexSightingsPlural": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -20133,7 +20299,8 @@
   "@nodedexSightingsSingular": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -20251,7 +20418,8 @@
   "@nodedexStreakDays": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -20284,7 +20452,8 @@
   "@nodedexSummaryEncountersRecorded": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -20428,7 +20597,8 @@
   "@nodedexTimelineEncounterSession": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "duration": {
         "type": "String"
@@ -20938,7 +21108,8 @@
     "description": "Number of mesh hops to reach a node",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -21095,7 +21266,8 @@
     "description": "Section header for nodes that are two or more hops away.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -21108,7 +21280,8 @@
     "description": "App bar title showing node count.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -21373,7 +21546,8 @@
     "description": "Proximity badge label showing number of mesh hops (pluralized)",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -21632,7 +21806,8 @@
   "@presenceNodeCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "noun": {
         "type": "String"
@@ -23169,7 +23344,8 @@
   "@routesPointCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in routes Parameters: {count} = numeric count."
@@ -23178,7 +23354,8 @@
   "@routesPointsShort": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in routes Parameters: {count} = numeric count."
@@ -23351,7 +23528,8 @@
     "description": "Count of BLE devices found during scan",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -23948,7 +24126,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of adminable nodes."
+        "description": "Number of adminable nodes.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -24551,7 +24730,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "The per-conversation message limit."
+        "description": "The per-conversation message limit.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25145,7 +25325,8 @@
     "description": "Relative time format for days. {count} is the number of days.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25154,7 +25335,8 @@
     "description": "Relative time format for hours. {count} is the number of hours.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25163,7 +25345,8 @@
     "description": "Relative time format for minutes. {count} is the number of minutes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25172,7 +25355,8 @@
     "description": "Relative time format for seconds. {count} is the number of seconds.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25347,7 +25531,8 @@
     "description": "Count label next to position history header. {count} is number of recorded positions.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25380,7 +25565,8 @@
     "description": "Button to expand the collapsed position history list. {count} is total positions.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25437,7 +25623,8 @@
     "description": "Relative time chip for hours since entity was received. {count} is hours.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25446,7 +25633,8 @@
     "description": "Relative time chip for minutes since entity was received. {count} is minutes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25455,7 +25643,8 @@
     "description": "Relative time chip for seconds since entity was received. {count} is seconds.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25509,7 +25698,8 @@
     "description": "Relative time format in days for target info card. {count} is the number of days.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25518,7 +25708,8 @@
     "description": "Relative time format in hours for target info card. {count} is the number of hours.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25527,7 +25718,8 @@
     "description": "Relative time format in minutes for target info card. {count} is the number of minutes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -25536,7 +25728,8 @@
     "description": "Relative time format in seconds for target info card. {count} is the number of seconds.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -26551,7 +26744,8 @@
     "description": "Position count label per node in drawer (singular/plural).",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -26572,7 +26766,8 @@
     "description": "Snackbar message after successful position export.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -26625,7 +26820,8 @@
     "description": "Node count pill label on the position map.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -26680,7 +26876,8 @@
     "description": "Chart legend label showing total readings count.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -26747,7 +26944,8 @@
     "description": "Snackbar message after successful traceroute export.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -27073,7 +27271,8 @@
     "description": "Button to add an item to a list element, showing current count",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -28273,7 +28472,8 @@
     "description": "Relative time in days",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -28282,7 +28482,8 @@
     "description": "Relative time in hours",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -28295,7 +28496,8 @@
     "description": "Relative time in minutes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -28534,7 +28736,8 @@
     "description": "Template switch warning showing current selection count",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "dataType": {
         "type": "String"
@@ -28806,7 +29009,8 @@
     "description": "Count of active filters on world mesh view",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -28898,7 +29102,8 @@
   "@worldMeshFilterNodesWithBattery": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: world mesh filter nodes with battery Parameters: {count} = numeric count."
@@ -28907,7 +29112,8 @@
   "@worldMeshFilterNodesWithSensors": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: world mesh filter nodes with sensors Parameters: {count} = numeric count."
@@ -29103,7 +29309,8 @@
   "@worldMeshMoreGateways": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: world mesh more gateways Parameters: {count} = numeric count."
@@ -29179,7 +29386,8 @@
     "description": "Count of search results in world mesh",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -29199,7 +29407,8 @@
   "@worldMeshSectionNeighbors": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: world mesh section neighbors Parameters: {count} = numeric count."
@@ -29212,7 +29421,8 @@
   "@worldMeshSectionSeenBy": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: world mesh section seen by Parameters: {count} = numeric count."
@@ -29491,7 +29701,8 @@
   "@remoteAdminNodesAvailable": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: remote admin nodes available Parameters: {count} = numeric count."
@@ -30739,7 +30950,8 @@
   "@helpCenterMoreTours": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in help center Parameters: {count} = numeric count."
@@ -30748,7 +30960,8 @@
   "@helpCenterStepsCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in help center Parameters: {count} = numeric count."
@@ -30834,7 +31047,8 @@
   "@storeForwardHistoryReturnMaxSubtitle": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Subtitle Parameters: {count} = numeric count."
@@ -30893,7 +31107,8 @@
   "@geofenceNodesCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: geofence nodes count Parameters: {count} = numeric count."
@@ -31566,7 +31781,8 @@
     "description": "Range Test: number of test packets heard during the current recording",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -31595,7 +31811,8 @@
     "description": "Range Test: number of packets in a recorded test",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -31701,7 +31918,8 @@
     "description": "Range Test: number of packets from the same sender that did not arrive before this one",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -34210,7 +34428,8 @@
   "@ringtoneBrowseCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: ringtone browse count Parameters: {count} = numeric count."
@@ -34232,7 +34451,8 @@
     "description": "Expansion footer on the built-in ringtone presets list. Tapping reveals the full set; the curated 10 are shown by default.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -34320,7 +34540,8 @@
   "@ringtoneLibrarySearchCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "UI text: ringtone library search count Parameters: {count} = numeric count."
@@ -34574,7 +34795,8 @@
         "type": "int"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in account management Parameters: {owned}, {total} = numeric count."
@@ -37419,10 +37641,12 @@
   "@globalLayerRunningChecksProgress": {
     "placeholders": {
       "passed": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in global layer / MQTT Parameters: {passed}, {total} = numeric count."
@@ -37456,7 +37680,8 @@
   "@globalLayerAllChecksPassed": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in global layer / MQTT Parameters: {count} = numeric count."
@@ -37477,10 +37702,12 @@
   "@globalLayerChecksFailedCount": {
     "placeholders": {
       "failed": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Error message in global layer / MQTT Parameters: {failed}, {total} = numeric count."
@@ -37561,7 +37788,8 @@
   "@globalLayerSubscribedToTopics": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in global layer / MQTT Parameters: {count} = numeric count."
@@ -37694,7 +37922,8 @@
   "@globalLayerActiveTopicsCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in global layer / MQTT Parameters: {count} = numeric count."
@@ -37779,7 +38008,8 @@
   "@globalLayerActiveErrors": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Error message in global layer / MQTT Parameters: {count} = numeric count."
@@ -38057,7 +38287,8 @@
     "description": "Hint shown above the widget list in the Manage Widgets bottom sheet, only when the user owns Widgets Pack and still has unused premium widgets to add.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "packName": {
         "type": "String",
@@ -38090,7 +38321,8 @@
     "description": "Subtitle on the dashboard discovery card shown to Widgets Pack owners who still have unused premium widgets - promotes opening the picker.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -38258,7 +38490,8 @@
         "type": "String"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in global layer / MQTT Parameters: {current}, {total} = numeric count."
@@ -38291,10 +38524,12 @@
   "@helpCenterProgressLabel": {
     "placeholders": {
       "completed": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Label in help center Parameters: {completed}, {total} = numeric count."
@@ -38458,7 +38693,8 @@
     "description": "Tooltip showing how many nodes were discovered via the Global Layer",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -39995,7 +40231,8 @@
     "description": "Notification title for batched node discovery",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -40793,7 +41030,8 @@
         "type": "int"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -40820,7 +41058,8 @@
     "description": "Summary when all conditions in a group passed",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -40829,10 +41068,12 @@
     "description": "Summary when some conditions in a group failed",
     "placeholders": {
       "failed": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -40844,7 +41085,8 @@
         "type": "int"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -41026,7 +41268,8 @@
   "@nodedexMilestoneEncounterN": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Text in node management Parameters: {count} = numeric count."
@@ -42064,7 +42307,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "example": "8"
+        "example": "8",
+        "format": "decimalPattern"
       },
       "max": {
         "type": "int",
@@ -42257,7 +42501,8 @@
     "description": "Text shown for how many minutes ago a peer was last seen.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -42266,7 +42511,8 @@
     "description": "Text shown for how many hours ago a peer was last seen.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -42495,7 +42741,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "example": "2"
+        "example": "2",
+        "format": "decimalPattern"
       }
     }
   },
@@ -42780,7 +43027,8 @@
     "description": "Last-heard chip label, in minutes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -42789,7 +43037,8 @@
     "description": "Last-heard chip label, in hours.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -42802,7 +43051,8 @@
     "description": "Hop-count chip label for multi-hop neighbors.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43241,7 +43491,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "example": "3"
+        "example": "3",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43577,11 +43828,13 @@
     "placeholders": {
       "passed": {
         "type": "int",
-        "example": "7"
+        "example": "7",
+        "format": "decimalPattern"
       },
       "total": {
         "type": "int",
-        "example": "7"
+        "example": "7",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43591,7 +43844,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "example": "20"
+        "example": "20",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43605,7 +43859,8 @@
       },
       "total": {
         "type": "int",
-        "example": "7"
+        "example": "7",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43638,7 +43893,8 @@
     "description": "Step count label for a QA scenario.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43671,10 +43927,12 @@
     "description": "Summary of QA run results.",
     "placeholders": {
       "passed": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -43941,7 +44199,8 @@
     "description": "Hop count label for peer proximity.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44110,7 +44369,8 @@
     "description": "Freshness label in minutes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44119,7 +44379,8 @@
     "description": "Freshness label in hours.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44320,7 +44581,8 @@
     "description": "Label showing number of additional list items not displayed.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44333,7 +44595,8 @@
     "description": "Relative time label for timestamps minutes ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44342,7 +44605,8 @@
     "description": "Relative time label for timestamps hours ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44351,7 +44615,8 @@
     "description": "Relative time label for timestamps days ago.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44548,7 +44813,8 @@
     "description": "Short duration label in minutes.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44557,7 +44823,8 @@
     "description": "Short duration label in hours.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -44787,7 +45054,8 @@
     "description": "Label showing how many elevation samples were loaded.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -45393,7 +45661,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of tiles that will be downloaded"
+        "description": "Number of tiles that will be downloaded",
+        "format": "decimalPattern"
       },
       "size": {
         "type": "String",
@@ -45425,11 +45694,13 @@
     "placeholders": {
       "done": {
         "type": "int",
-        "description": "Number of tiles processed so far"
+        "description": "Number of tiles processed so far",
+        "format": "decimalPattern"
       },
       "total": {
         "type": "int",
-        "description": "Total number of tiles to process"
+        "description": "Total number of tiles to process",
+        "format": "decimalPattern"
       }
     }
   },
@@ -45443,7 +45714,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of tiles now available offline"
+        "description": "Number of tiles now available offline",
+        "format": "decimalPattern"
       }
     }
   },
@@ -45546,7 +45818,8 @@
     "description": "Shows the number of connected TAK clients",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -45675,7 +45948,8 @@
     "description": "Count of active live streams",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -45997,7 +46271,8 @@
     "description": "Number of reports in a case",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46006,7 +46281,8 @@
     "description": "Number of contributing nodes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46347,7 +46623,8 @@
     "description": "Accessibility label for the co-seen avatar cluster on a NodeDex card",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46356,7 +46633,8 @@
     "description": "Accessibility label for the overflow indicator circle in an avatar stack, e.g. '+3 more'",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46369,7 +46647,8 @@
     "description": "Subtitle for the co-seen card showing how many peers share sessions",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46710,7 +46989,8 @@
     "description": "Compact count label for checklist or list items.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46719,7 +46999,8 @@
     "description": "Compact count label for poll options.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46728,10 +47009,12 @@
     "description": "Progress label for checklist completion state.",
     "placeholders": {
       "done": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46740,7 +47023,8 @@
     "description": "Label indicating that a remote checklist has additional hidden items.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46753,7 +47037,8 @@
     "description": "Compact vote count label for poll detail surfaces.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46854,7 +47139,8 @@
     "description": "Subtitle showing message count in a timeline session card",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46883,7 +47169,8 @@
     "description": "Duration value in minutes",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -46932,7 +47219,8 @@
     "description": "Subtitle showing how many people sent a particular reaction.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -47217,7 +47505,8 @@
     "description": "Post count display in the feed header.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -47507,7 +47796,8 @@
     "description": "Age label shown near the stage/branch header.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -48014,7 +48304,8 @@
     "description": "Header pill showing the total number of timeline events recorded for this pet.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -48044,7 +48335,8 @@
     "description": "Multiplier pill for grouped minor events, e.g. 3× for three charges within the grouping window.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -48452,7 +48744,8 @@
         "type": "int"
       },
       "total": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -48553,7 +48846,8 @@
     "description": "Subtitle showing record count for a capture.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -48562,7 +48856,8 @@
     "description": "Subtitle showing distinct source count for a capture.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49367,7 +49662,8 @@
     "description": "Constellation route card hop value.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49385,7 +49681,8 @@
     "description": "Constellation encounter card subtitle: total encounters.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49394,7 +49691,8 @@
     "description": "Constellation messages card subtitle: number of messages exchanged with the node.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49403,7 +49701,8 @@
     "description": "Compact relative time in Constellation cards, months.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49412,7 +49711,8 @@
     "description": "Compact relative time in Constellation cards, years.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49458,7 +49758,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "example": "2"
+        "example": "2",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49566,7 +49867,8 @@
   "@operationCardProgressSubtitle": {
     "placeholders": {
       "completed": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       },
       "target": {
         "type": "int"
@@ -49777,7 +50079,8 @@
     "description": "Presence card encounter count for a node.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49794,7 +50097,8 @@
     "description": "Presence card: days since the node was first seen (2 to 6).",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49803,7 +50107,8 @@
     "description": "Presence card: weeks since the node was first seen.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49812,7 +50117,8 @@
     "description": "Presence card: months since the node was first seen.",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -49946,7 +50252,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "example": "3"
+        "example": "3",
+        "format": "decimalPattern"
       }
     }
   },
@@ -50245,7 +50552,8 @@
       },
       "total": {
         "type": "int",
-        "example": "10"
+        "example": "10",
+        "format": "decimalPattern"
       }
     }
   },
@@ -51065,7 +51373,8 @@
   "@helpModeResponderCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Number of active responders."
@@ -51369,7 +51678,8 @@
   "@helpModeActiveCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     },
     "description": "Count of active help requests shown in the global banner / inbox."
@@ -52065,7 +52375,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of nodes."
+        "description": "Number of nodes.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52075,7 +52386,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of nodes."
+        "description": "Number of nodes.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52093,11 +52405,13 @@
     "placeholders": {
       "done": {
         "type": "int",
-        "description": "Nodes handled so far."
+        "description": "Nodes handled so far.",
+        "format": "decimalPattern"
       },
       "total": {
         "type": "int",
-        "description": "Nodes to remove."
+        "description": "Nodes to remove.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52107,7 +52421,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of nodes."
+        "description": "Number of nodes.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52117,7 +52432,8 @@
     "placeholders": {
       "count": {
         "type": "int",
-        "description": "Number of nodes."
+        "description": "Number of nodes.",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52160,7 +52476,8 @@
     "description": "Status after the sample, with messages heard",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52251,7 +52568,8 @@
     "description": "Nodes heard on a topic",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -52260,7 +52578,8 @@
     "description": "Nodes heard on a topic whose stream was capped, so the count is a floor",
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },

@@ -30,10 +30,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshBeaconNoticeTitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count neue Mesh-Beacon-Angebote',
+      other: '$countString neue Mesh-Beacon-Angebote',
       one: 'Neues Mesh-Beacon-Angebot',
     );
     return '$_temp0';
@@ -90,7 +94,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String aetherDetailReceptionsValue(int count) {
-    return '$count gemeldet';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString gemeldet';
   }
 
   @override
@@ -298,7 +306,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String aetherPickerAirportCount(int count) {
-    return '$count Flughäfen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Flughäfen';
   }
 
   @override
@@ -316,10 +328,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String aetherPickerResultCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Ergebnisse',
+      other: '$countString Ergebnisse',
       one: '1 Ergebnis',
     );
     return '$_temp0';
@@ -967,15 +983,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String authMfaDateDaysAgo(int count) {
-    return 'vor $count Tagen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Tagen';
   }
 
   @override
   String authMfaDateMonthsAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'vor $count Monaten',
+      other: 'vor $countString Monaten',
       one: 'vor 1 Monat',
     );
     return '$_temp0';
@@ -986,10 +1010,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String authMfaDateWeeksAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'vor $count Wochen',
+      other: 'vor $countString Wochen',
       one: 'vor 1 Woche',
     );
     return '$_temp0';
@@ -1358,7 +1386,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationActionChannelsCount(int count) {
-    return '$count Kanäle';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Kanäle';
   }
 
   @override
@@ -1535,7 +1567,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationActionSoundsCount(int count) {
-    return '$count Töne';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Töne';
   }
 
   @override
@@ -1571,17 +1607,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationCardActionCount(int count, String s) {
-    return '$count Aktion$s';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Aktion$s';
   }
 
   @override
   String automationCardDaysAgo(int count) {
-    return 'vor $count T';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString T';
   }
 
   @override
   String automationCardHoursAgo(int count) {
-    return 'vor $count Std';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Std';
   }
 
   @override
@@ -1589,17 +1637,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationCardMinutesAgo(int count) {
-    return 'vor $count Min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Min';
   }
 
   @override
   String automationCardRunsCount(int count) {
-    return '$count Ausführungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Ausführungen';
   }
 
   @override
   String automationCardWeeksAgo(int count) {
-    return 'vor $count W';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString W';
   }
 
   @override
@@ -1689,12 +1749,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationImportElseActions(int count) {
-    return 'SONST-Aktionen ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'SONST-Aktionen ($countString)';
   }
 
   @override
   String automationImportThenActions(int count) {
-    return 'DANN-Aktionen ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'DANN-Aktionen ($countString)';
   }
 
   @override
@@ -1722,10 +1790,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationCardConditionCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Bedingungen',
+      other: '$countString Bedingungen',
       one: '1 Bedingung',
     );
     return '$_temp0';
@@ -1865,7 +1937,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationFlowNodesCount(int count) {
-    return '$count Nodes';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nodes';
   }
 
   @override
@@ -1880,7 +1956,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationFlowToolbarDelete(int count) {
-    return 'Löschen ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Löschen ($countString)';
   }
 
   @override
@@ -1910,12 +1990,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationImportConditionsCount(int count) {
-    return 'Bedingungen ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Bedingungen ($countString)';
   }
 
   @override
   String automationImportConditionsText(int count) {
-    return '$count Bedingungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Bedingungen';
   }
 
   @override
@@ -1995,7 +2083,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationScreenDaysAgo(int count) {
-    return 'vor $count T';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString T';
   }
 
   @override
@@ -2034,7 +2126,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationScreenHoursAgo(int count) {
-    return 'vor $count Std';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Std';
   }
 
   @override
@@ -2046,7 +2142,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationScreenMinutesAgo(int count) {
-    return 'vor $count Min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Min';
   }
 
   @override
@@ -2254,7 +2354,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationTriggerEveryMinutes(int count) {
-    return 'Alle $count Minuten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Alle $countString Minuten';
   }
 
   @override
@@ -3163,7 +3267,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String channelsScreenTitle(int count) {
-    return 'Kanäle ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Kanäle ($countString)';
   }
 
   @override
@@ -3225,27 +3333,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String commonMinutesAgo(int count) {
-    return 'vor ${count}m';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}m';
   }
 
   @override
   String commonHoursAgo(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
   String commonDaysAgo(int count) {
-    return 'vor ${count}d';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}d';
   }
 
   @override
   String commonHopsSingular(int count) {
-    return '$count Hop';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hop';
   }
 
   @override
   String commonHopsPlural(int count) {
-    return '$count Hops';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hops';
   }
 
   @override
@@ -3343,10 +3471,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeGroupsNodeCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten',
+      other: '$countString Knoten',
       one: '1 Knoten',
       zero: 'Keine Knoten',
     );
@@ -3361,10 +3493,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeGroupsRemoveButton(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten entfernen',
+      other: '$countString Knoten entfernen',
       one: '1 Knoten entfernen',
     );
     return '$_temp0';
@@ -3372,11 +3508,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeGroupsRemoveMessage(int count, String group) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other:
-          '$count Knoten werden aus $group entfernt. Sie bleiben in deiner Knotenliste.',
+          '$countString Knoten werden aus $group entfernt. Sie bleiben in deiner Knotenliste.',
       one:
           'Dieser Knoten wird aus $group entfernt. Er bleibt in deiner Knotenliste.',
     );
@@ -3577,7 +3717,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String debugScreenDeviceEntryCount(int count) {
-    return '$count Einträge';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge';
   }
 
   @override
@@ -3607,7 +3751,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String debugScreenEntryCount(int count) {
-    return '$count Einträge';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge';
   }
 
   @override
@@ -4335,7 +4483,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String discoveryNodesFound(int count) {
-    return '$count Knoten gefunden';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Knoten gefunden';
   }
 
   @override
@@ -4377,10 +4529,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexIdentityChangedBannerTitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Identität $count-mal geändert',
+      other: 'Identität $countString-mal geändert',
       one: 'Identität einmal geändert',
     );
     return '$_temp0';
@@ -4835,7 +4991,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferClearedCount(int count) {
-    return '$count Übertragungen entfernt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Übertragungen entfernt';
   }
 
   @override
@@ -4843,7 +5003,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferContactsDaysAgo(int count) {
-    return 'vor ${count}T';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}T';
   }
 
   @override
@@ -4873,7 +5037,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferContactsHoursAgo(int count) {
-    return 'vor ${count}Std.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}Std.';
   }
 
   @override
@@ -4881,7 +5049,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferContactsMinutesAgo(int count) {
-    return 'vor ${count}Min.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}Min.';
   }
 
   @override
@@ -4936,7 +5108,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferContainerCleared(int count) {
-    return '$count Übertragungen entfernt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Übertragungen entfernt';
   }
 
   @override
@@ -5069,17 +5245,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferTimeMinutesAgo(int count) {
-    return 'vor ${count}Min.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}Min.';
   }
 
   @override
   String fileTransferTimeHoursAgo(int count) {
-    return 'vor ${count}Std.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}Std.';
   }
 
   @override
   String fileTransferTimeDaysAgo(int count) {
-    return 'vor ${count}T';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}T';
   }
 
   @override
@@ -5181,7 +5369,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferMoreBytes(int count) {
-    return '... $count weitere Bytes';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '... $countString weitere Bytes';
   }
 
   @override
@@ -5235,12 +5427,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferGalleryDurationSeconds(int count) {
-    return '${count}Sek.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}Sek.';
   }
 
   @override
   String fileTransferGalleryDurationMinutes(int count) {
-    return '${count}Min.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '${countString}Min.';
   }
 
   @override
@@ -5293,7 +5493,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String fileTransferLineCount(int count) {
-    return '$count Zeilen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Zeilen';
   }
 
   @override
@@ -5301,32 +5505,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String archiveEntryCount(int count) {
-    return '$count Dateien';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Dateien';
   }
 
   @override
   String archiveSummaryImages(int count) {
-    return '$count Bilder';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Bilder';
   }
 
   @override
   String archiveSummaryVoice(int count) {
-    return '$count Sprachnachrichten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Sprachnachrichten';
   }
 
   @override
   String archiveSummaryText(int count) {
-    return '$count Text';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Text';
   }
 
   @override
   String archiveSummaryOther(int count) {
-    return '$count sonstige';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString sonstige';
   }
 
   @override
   String archiveSummaryUnsupported(int count) {
-    return '$count nicht unterstützt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString nicht unterstützt';
   }
 
   @override
@@ -5646,7 +5874,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String gpsStatusDaysAgo(int count) {
-    return 'vor $count Tagen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Tagen';
   }
 
   @override
@@ -5670,7 +5902,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String gpsStatusHoursAgo(int count) {
-    return 'vor $count Stunden';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Stunden';
   }
 
   @override
@@ -5691,7 +5927,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String gpsStatusMinutesAgo(int count) {
-    return 'vor $count Minuten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Minuten';
   }
 
   @override
@@ -5721,7 +5961,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String gpsStatusSatellitesCount(int count) {
-    return '$count Satelliten in Sicht';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Satelliten in Sicht';
   }
 
   @override
@@ -5732,7 +5976,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String gpsStatusSecondsAgo(int count) {
-    return 'vor $count Sekunden';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Sekunden';
   }
 
   @override
@@ -5939,7 +6187,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String helpCenterToursCompletedCount(int completed, int total) {
-    return '$completed / $total abgeschlossen';
+    final intl.NumberFormat completedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String completedString = completedNumberFormat.format(completed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$completedString / $totalString abgeschlossen';
   }
 
   @override
@@ -6806,10 +7061,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mapClusterTapToListTitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten hier',
+      other: '$countString Knoten hier',
       one: '1 Knoten hier',
     );
     return '$_temp0';
@@ -6835,10 +7094,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String drawerCustomizeSummaryHidden(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Einträge ausgeblendet',
+      other: '$countString Einträge ausgeblendet',
       one: '1 Eintrag ausgeblendet',
     );
     return '$_temp0';
@@ -6931,7 +7194,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mapTakEntityCount(int count) {
-    return '• $count Entitäten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '• $countString Entitäten';
   }
 
   @override
@@ -6989,7 +7256,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshHealthIssueCount(int count) {
-    return '$count Probleme';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Probleme';
   }
 
   @override
@@ -7625,10 +7896,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreRepeaterBinaryRpcResponseLength(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Bytes',
+      other: '$countString Bytes',
       one: '1 Byte',
     );
     return '$_temp0';
@@ -7695,12 +7970,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreRepeaterAdminSettingsSavedSnackbar(int saved, int total) {
-    return '$saved von $total Einstellungen gespeichert.';
+    final intl.NumberFormat savedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String savedString = savedNumberFormat.format(saved);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$savedString von $totalString Einstellungen gespeichert.';
   }
 
   @override
   String meshcoreRepeaterAdminSettingsRefreshedSnackbar(int count) {
-    return '$count Einstellungen vom Funkgerät aktualisiert.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einstellungen vom Funkgerät aktualisiert.';
   }
 
   @override
@@ -7730,7 +8016,14 @@ class AppLocalizationsDe extends AppLocalizations {
     int saved,
     int total,
   ) {
-    return '$saved von $total Einstellungen gespeichert. Einige Befehle haben das Zeitlimit überschritten - die Admin-Sitzung ist möglicherweise abgelaufen.';
+    final intl.NumberFormat savedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String savedString = savedNumberFormat.format(saved);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$savedString von $totalString Einstellungen gespeichert. Einige Befehle haben das Zeitlimit überschritten - die Admin-Sitzung ist möglicherweise abgelaufen.';
   }
 
   @override
@@ -8386,7 +8679,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreConsoleFramesCaptured(int count) {
-    return '$count Frames aufgezeichnet';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Frames aufgezeichnet';
   }
 
   @override
@@ -8422,12 +8719,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreContactCount(int count) {
-    return '$count Kontakt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Kontakt';
   }
 
   @override
   String meshcoreContactCountPlural(int count) {
-    return '$count Kontakte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Kontakte';
   }
 
   @override
@@ -8643,7 +8948,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreChatTrafficByteCount(int bytes, int count) {
-    return '$bytes B ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$bytes B ($countString)';
   }
 
   @override
@@ -8792,7 +9101,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreManualPathPreview(int count, String bytes) {
-    return '$count Hops: $bytes';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hops: $bytes';
   }
 
   @override
@@ -8815,7 +9128,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreManualPathTooLong(int count) {
-    return '$count Hops sind zu viele; die Firmware akzeptiert maximal 64.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hops sind zu viele; die Firmware akzeptiert maximal 64.';
   }
 
   @override
@@ -9537,7 +9854,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcorePathHistoryTileSubtitle(int count) {
-    return '$count gespeicherte Pfade';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString gespeicherte Pfade';
   }
 
   @override
@@ -9569,10 +9890,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcorePathHistoryHopCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
       zero: 'Direktroute',
     );
@@ -9766,10 +10091,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreBleDebugLogEntryCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Einträge',
+      other: '$countString Einträge',
       one: '1 Eintrag',
       zero: 'Keine Einträge',
     );
@@ -10233,10 +10562,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcorePathHops(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
     );
     return '$_temp0';
@@ -10244,10 +10577,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcorePathHopsForced(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops (erzwungen)',
+      other: '$countString Hops (erzwungen)',
       one: '1 Hop (erzwungen)',
     );
     return '$_temp0';
@@ -10918,17 +11255,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreTimeAgoDays(int count) {
-    return 'vor ${count}d';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}d';
   }
 
   @override
   String meshcoreTimeAgoHours(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
   String meshcoreTimeAgoMinutes(int count) {
-    return 'vor ${count}m';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}m';
   }
 
   @override
@@ -10962,7 +11311,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreFrameLogCopied(int count) {
-    return '$count Frames kopiert';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Frames kopiert';
   }
 
   @override
@@ -11049,10 +11402,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshcoreTracePathHops(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
     );
     return '$_temp0';
@@ -11210,7 +11567,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String messagingContactsTitleWithCount(int count) {
-    return 'Kontakte ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Kontakte ($countString)';
   }
 
   @override
@@ -11392,7 +11753,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String messagingRetryProgress(int count, int max) {
-    return '$count/$max Versuche';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString/$max Versuche';
   }
 
   @override
@@ -11403,13 +11768,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String messagingSearchResultsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Nachrichten',
       one: 'Nachricht',
     );
-    return '$count $_temp0 gefunden';
+    return '$countString $_temp0 gefunden';
   }
 
   @override
@@ -11453,13 +11822,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String messagingTechInfoHops(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Hops',
       one: 'Hop',
     );
-    return '$count $_temp0';
+    return '$countString $_temp0';
   }
 
   @override
@@ -11869,7 +12242,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasTransmissionQueued(int count) {
-    return '$count in Warteschlange';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString in Warteschlange';
   }
 
   @override
@@ -11880,10 +12257,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasTransmissionTooltipQueued(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Pixel warten auf die Übertragung über das Mesh',
+      other: '$countString Pixel warten auf die Übertragung über das Mesh',
       one: '1 Pixel wartet auf die Übertragung über das Mesh',
     );
     return '$_temp0';
@@ -11931,10 +12312,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasVitalsPainted(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count GEMALT',
+      other: '$countString GEMALT',
       one: '1 GEMALT',
       zero: '0 GEMALT',
     );
@@ -11943,10 +12328,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasVitalsLive(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count LIVE',
+      other: '$countString LIVE',
       one: '1 LIVE',
     );
     return '$_temp0';
@@ -12003,10 +12392,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasOverviewCellCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count bemalt',
+      other: '$countString bemalt',
       one: '1 bemalt',
       zero: '0 bemalt',
     );
@@ -12090,10 +12483,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasOverviewHeroChannelsChip(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Kanäle',
+      other: '$countString Kanäle',
       one: '1 Kanal',
     );
     return '$_temp0';
@@ -12101,10 +12498,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasOverviewHeroLiveChip(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count aktiv',
+      other: '$countString aktiv',
       one: '1 aktiv',
     );
     return '$_temp0';
@@ -12119,10 +12520,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasPresenceCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Funkgeräte hier',
+      other: '$countString Funkgeräte hier',
       one: '1 Funkgerät hier',
     );
     return '$_temp0';
@@ -12130,17 +12535,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCanvasPresenceCountTight(int count) {
-    return '$count';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString';
   }
 
   @override
   String meshCanvasPresenceWithPainting(int count, int painting) {
-    return '$count hier · $painting malen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString hier · $painting malen';
   }
 
   @override
   String meshCanvasPresenceWithPaintingTight(int count, int painting) {
-    return '$count · $painting';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString · $painting';
   }
 
   @override
@@ -12194,12 +12611,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeboardThreadCount(int count) {
-    return '$count Threads';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Threads';
   }
 
   @override
   String nodeboardReplyCount(int count) {
-    return '$count Antworten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Antworten';
   }
 
   @override
@@ -12228,7 +12653,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeboardSectionCount(int count) {
-    return '$count Abschnitte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Abschnitte';
   }
 
   @override
@@ -12261,27 +12690,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeboardMinutesAgo(int count) {
-    return 'vor ${count}min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}min';
   }
 
   @override
   String nodeboardHoursAgo(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
   String nodeboardDaysAgo(int count) {
-    return 'vor ${count}d';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}d';
   }
 
   @override
   String nodeboardMonthsAgo(int count) {
-    return 'vor ${count}Mo.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}Mo.';
   }
 
   @override
   String nodeboardYearsAgo(int count) {
-    return 'vor ${count}J.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}J.';
   }
 
   @override
@@ -12412,7 +12861,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeAnalyticsDirectNeighbors(int count) {
-    return 'Direkte Nachbarn ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Direkte Nachbarn ($countString)';
   }
 
   @override
@@ -12439,7 +12892,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeAnalyticsExportRecordCount(int count) {
-    return '$count Einträge';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge';
   }
 
   @override
@@ -12532,7 +12989,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeAnalyticsSeenByGateways(int count) {
-    return 'Von Gateways gesehen ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Von Gateways gesehen ($countString)';
   }
 
   @override
@@ -13333,7 +13794,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeIntelligenceGatewayCount(int count) {
-    return '$count Gateways';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Gateways';
   }
 
   @override
@@ -13356,7 +13821,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodeIntelligenceNeighborCount(int count) {
-    return '$count Nachbarn';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nachbarn';
   }
 
   @override
@@ -13370,7 +13839,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexActiveDaysOf14(int count) {
-    return '$count/14 Tage';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString/14 Tage';
   }
 
   @override
@@ -13522,7 +13995,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexCollectedCount(int count) {
-    return '$count gesammelt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString gesammelt';
   }
 
   @override
@@ -13542,7 +14019,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexConstellationLinkCount(int count) {
-    return '$count historische Verbindungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString historische Verbindungen';
   }
 
   @override
@@ -13551,7 +14032,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexConstellationNodeCount(int count) {
-    return '$count Knoten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Knoten';
   }
 
   @override
@@ -13839,7 +14324,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEncounterCountLabel(int count) {
-    return '$count Begegnungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen';
   }
 
   @override
@@ -13847,7 +14336,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEncountersCount(int count) {
-    return '$count Begegnungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen';
   }
 
   @override
@@ -13871,12 +14364,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEvidenceCoSeenWith(int count) {
-    return 'Historisch gemeinsam gesehen mit $count Knoten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Historisch gemeinsam gesehen mit $countString Knoten';
   }
 
   @override
   String nodedexEvidenceDistinctPositions(int count) {
-    return 'An $count verschiedenen Positionen beobachtet';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'An $countString verschiedenen Positionen beobachtet';
   }
 
   @override
@@ -13891,12 +14392,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEvidenceEncountersReliable(int count) {
-    return '$count Begegnungen (zuverlässig)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen (zuverlässig)';
   }
 
   @override
   String nodedexEvidenceFewEncountersOverDays(int encounters, int days) {
-    return 'Nur $encounters Begegnungen in $days Tagen';
+    final intl.NumberFormat encountersNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String encountersString = encountersNumberFormat.format(encounters);
+
+    return 'Nur $encountersString Begegnungen in $days Tagen';
   }
 
   @override
@@ -13935,7 +14444,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEvidenceMessagesExchanged(int count) {
-    return '$count Nachrichten ausgetauscht';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nachrichten ausgetauscht';
   }
 
   @override
@@ -13959,7 +14472,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEvidencePositionsObserved(int count) {
-    return '$count Positionen beobachtet';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Positionen beobachtet';
   }
 
   @override
@@ -13969,7 +14486,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEvidenceSeenAcrossRegions(int count) {
-    return 'In $count Regionen gesehen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'In $countString Regionen gesehen';
   }
 
   @override
@@ -13979,7 +14500,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexEvidenceTotalEncounters(int count) {
-    return '$count Begegnungen insgesamt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen insgesamt';
   }
 
   @override
@@ -14001,7 +14526,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteAnchor0(int coSeen) {
-    return 'Hub-Knoten. Historisch gemeinsam gesehen mit $coSeen anderen Knoten.';
+    final intl.NumberFormat coSeenNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String coSeenString = coSeenNumberFormat.format(coSeen);
+
+    return 'Hub-Knoten. Historisch gemeinsam gesehen mit $coSeenString anderen Knoten.';
   }
 
   @override
@@ -14010,7 +14539,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteAnchor2(int coSeen) {
-    return 'Dauerhafter Hub. $coSeen Knoten historisch in der Nähe beobachtet.';
+    final intl.NumberFormat coSeenNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String coSeenString = coSeenNumberFormat.format(coSeen);
+
+    return 'Dauerhafter Hub. $coSeenString Knoten historisch in der Nähe beobachtet.';
   }
 
   @override
@@ -14027,7 +14560,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteAnchor6(int coSeen) {
-    return 'Infrastruktur-Ankerpunkt. Historisch verbunden mit $coSeen Peers.';
+    final intl.NumberFormat coSeenNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String coSeenString = coSeenNumberFormat.format(coSeen);
+
+    return 'Infrastruktur-Ankerpunkt. Historisch verbunden mit $coSeenString Peers.';
   }
 
   @override
@@ -14050,7 +14587,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteBeacon3(int encounters) {
-    return 'Hohe Verfügbarkeit. $encounters Begegnungen aufgezeichnet.';
+    final intl.NumberFormat encountersNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String encountersString = encountersNumberFormat.format(encounters);
+
+    return 'Hohe Verfügbarkeit. $encountersString Begegnungen aufgezeichnet.';
   }
 
   @override
@@ -14072,7 +14613,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteCourier0(int messages, int encounters) {
-    return 'Hohes Nachrichtenvolumen. $messages Nachrichten über $encounters Begegnungen.';
+    final intl.NumberFormat messagesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String messagesString = messagesNumberFormat.format(messages);
+    final intl.NumberFormat encountersNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String encountersString = encountersNumberFormat.format(encounters);
+
+    return 'Hohes Nachrichtenvolumen. $messagesString Nachrichten über $encountersString Begegnungen.';
   }
 
   @override
@@ -14085,7 +14633,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteCourier3(int messages) {
-    return 'Transportiert Daten zwischen Mesh-Segmenten. $messages Nachrichten protokolliert.';
+    final intl.NumberFormat messagesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String messagesString = messagesNumberFormat.format(messages);
+
+    return 'Transportiert Daten zwischen Mesh-Segmenten. $messagesString Nachrichten protokolliert.';
   }
 
   @override
@@ -14094,7 +14646,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteCourier5(int messages) {
-    return 'Kommunikationsintensiver Knoten. $messages Austausche aufgezeichnet.';
+    final intl.NumberFormat messagesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String messagesString = messagesNumberFormat.format(messages);
+
+    return 'Kommunikationsintensiver Knoten. $messagesString Austausche aufgezeichnet.';
   }
 
   @override
@@ -14144,7 +14700,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteGhost1(int encounters, int age) {
-    return 'Schwer fassbar. $encounters Begegnungen über $age Tage.';
+    final intl.NumberFormat encountersNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String encountersString = encountersNumberFormat.format(encounters);
+
+    return 'Schwer fassbar. $encountersString Begegnungen über $age Tage.';
   }
 
   @override
@@ -14196,7 +14756,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteRelay5(int encounters) {
-    return 'Relay-Verhalten konsistent über $encounters Sitzungen.';
+    final intl.NumberFormat encountersNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String encountersString = encountersNumberFormat.format(encounters);
+
+    return 'Relay-Verhalten konsistent über $encountersString Sitzungen.';
   }
 
   @override
@@ -14218,7 +14782,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteSentinel2(int encounters) {
-    return 'Wächter-Präsenz. $encounters Beobachtungen von einem Standort.';
+    final intl.NumberFormat encountersNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String encountersString = encountersNumberFormat.format(encounters);
+
+    return 'Wächter-Präsenz. $encountersString Beobachtungen von einem Standort.';
   }
 
   @override
@@ -14279,17 +14847,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteWanderer0(int regions) {
-    return 'In $regions Regionen aufgezeichnet. Keine feste Richtung.';
+    final intl.NumberFormat regionsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String regionsString = regionsNumberFormat.format(regions);
+
+    return 'In $regionsString Regionen aufgezeichnet. Keine feste Richtung.';
   }
 
   @override
   String nodedexFieldNoteWanderer1(int positions) {
-    return 'Durchreisend ohne zu verweilen. $positions Positionen protokolliert.';
+    final intl.NumberFormat positionsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String positionsString = positionsNumberFormat.format(positions);
+
+    return 'Durchreisend ohne zu verweilen. $positionsString Positionen protokolliert.';
   }
 
   @override
   String nodedexFieldNoteWanderer2(int regions) {
-    return 'Flüchtiges Signal. Beobachtet beim Durchqueren von $regions Zonen.';
+    final intl.NumberFormat regionsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String regionsString = regionsNumberFormat.format(regions);
+
+    return 'Flüchtiges Signal. Beobachtet beim Durchqueren von $regionsString Zonen.';
   }
 
   @override
@@ -14303,12 +14883,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexFieldNoteWanderer5(int regions) {
-    return 'Kein Ankerpunkt erkannt. Drift in $regions Regionen bestätigt.';
+    final intl.NumberFormat regionsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String regionsString = regionsNumberFormat.format(regions);
+
+    return 'Kein Ankerpunkt erkannt. Drift in $regionsString Regionen bestätigt.';
   }
 
   @override
   String nodedexFieldNoteWanderer6(int positions) {
-    return 'An $positions Positionen protokolliert. Weg unklar.';
+    final intl.NumberFormat positionsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String positionsString = positionsNumberFormat.format(positions);
+
+    return 'An $positionsString Positionen protokolliert. Weg unklar.';
   }
 
   @override
@@ -14374,7 +14962,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexGalleryPositionCounter(int current, int total) {
-    return '$current / $total';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$current / $totalString';
   }
 
   @override
@@ -14433,22 +15025,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexImportButtonLabelPlural(int count) {
-    return '$count Einträge importieren';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge importieren';
   }
 
   @override
   String nodedexImportButtonLabelSingular(int count) {
-    return '$count Eintrag importieren';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Eintrag importieren';
   }
 
   @override
   String nodedexImportClassificationConflictPlural(int count) {
-    return '$count Klassifizierungskonflikte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Klassifizierungskonflikte';
   }
 
   @override
   String nodedexImportClassificationConflictSingular(int count) {
-    return '$count Klassifizierungskonflikt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Klassifizierungskonflikt';
   }
 
   @override
@@ -14470,7 +15078,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexImportEntriesInFile(int count) {
-    return '$count Einträge in der Datei';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge in der Datei';
   }
 
   @override
@@ -14512,12 +15124,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexImportNoteConflictPlural(int count) {
-    return '$count Notizkonflkte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Notizkonflkte';
   }
 
   @override
   String nodedexImportNoteConflictSingular(int count) {
-    return '$count Notizkonfikt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Notizkonfikt';
   }
 
   @override
@@ -14562,12 +15182,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexImportSuccessPlural(int count) {
-    return '$count Einträge importiert';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge importiert';
   }
 
   @override
   String nodedexImportSuccessSingular(int count) {
-    return '$count Eintrag importiert';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Eintrag importiert';
   }
 
   @override
@@ -14600,7 +15228,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexLastReadings(int count) {
-    return 'Letzte $count Messwerte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Letzte $countString Messwerte';
   }
 
   @override
@@ -14667,7 +15299,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexMessagesExchangedCoPresent(int count) {
-    return '$count Nachrichten ausgetauscht, während gemeinsam anwesend';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nachrichten ausgetauscht, während gemeinsam anwesend';
   }
 
   @override
@@ -14694,12 +15330,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexNodeCountPlural(int count) {
-    return '$count Knoten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Knoten';
   }
 
   @override
   String nodedexNodeCountSingular(int count) {
-    return '$count Knoten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Knoten';
   }
 
   @override
@@ -14865,7 +15509,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexRegionEncounterCount(int count) {
-    return '$count Begegnungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen';
   }
 
   @override
@@ -14960,12 +15608,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexSeenTogetherCount(int count) {
-    return '$count-mal zusammen gesehen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString-mal zusammen gesehen';
   }
 
   @override
   String nodedexSelectedLinksCount(int count) {
-    return '$count historische Verbindungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString historische Verbindungen';
   }
 
   @override
@@ -15007,12 +15663,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexSightingsPlural(int count) {
-    return '$count Sichtungen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Sichtungen';
   }
 
   @override
   String nodedexSightingsSingular(int count) {
-    return '$count Sichtung';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Sichtung';
   }
 
   @override
@@ -15101,7 +15765,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexStreakDays(int count) {
-    return '$count-Tage-Serie';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString-Tage-Serie';
   }
 
   @override
@@ -15124,7 +15792,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexSummaryEncountersRecorded(int count) {
-    return '$count Begegnungen aufgezeichnet';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen aufgezeichnet';
   }
 
   @override
@@ -15225,7 +15897,11 @@ class AppLocalizationsDe extends AppLocalizations {
     String duration,
     String detail,
   ) {
-    return '$count Begegnungen über $duration$detail';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Begegnungen über $duration$detail';
   }
 
   @override
@@ -15594,7 +16270,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodesScreenHopCount(int count) {
-    return '$count Hops';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hops';
   }
 
   @override
@@ -15711,7 +16391,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodesScreenSectionHopsMany(int count) {
-    return '$count Hops';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hops';
   }
 
   @override
@@ -15719,7 +16403,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodesScreenTitle(int count) {
-    return 'Knoten ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Knoten ($countString)';
   }
 
   @override
@@ -15937,7 +16625,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String onboardingSignalHopCount(int count) {
-    return '$count Hop';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Hop';
   }
 
   @override
@@ -16138,7 +16830,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String presenceNodeCount(int count, String noun) {
-    return '$count $noun';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString $noun';
   }
 
   @override
@@ -17259,12 +17955,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String routesPointCount(int count) {
-    return '$count Punkte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Punkte';
   }
 
   @override
   String routesPointsShort(int count) {
-    return '$count Pkt.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Pkt.';
   }
 
   @override
@@ -17392,7 +18096,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String scannerDevicesFoundCount(int count) {
-    return '$count Geräte gefunden';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Geräte gefunden';
   }
 
   @override
@@ -17853,7 +18561,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String settingsRemoteAdminNodeCount(int count) {
-    return '$count Knoten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Knoten';
   }
 
   @override
@@ -18375,7 +19087,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String settingsTileMessageHistorySubtitle(int count) {
-    return 'Bis zu $count pro Unterhaltung';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Bis zu $countString pro Unterhaltung';
   }
 
   @override
@@ -18850,22 +19566,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takDashboardRelativeTimeDays(int count) {
-    return 'vor ${count}d';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}d';
   }
 
   @override
   String takDashboardRelativeTimeHours(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
   String takDashboardRelativeTimeMinutes(int count) {
-    return 'vor ${count}min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}min';
   }
 
   @override
   String takDashboardRelativeTimeSeconds(int count) {
-    return 'vor ${count}s';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}s';
   }
 
   @override
@@ -18983,7 +19715,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takEventDetailPositionCount(int count) {
-    return '($count Positionen)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '($countString Positionen)';
   }
 
   @override
@@ -19006,7 +19742,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takEventDetailShowAllPositions(int count) {
-    return 'Alle $count Positionen anzeigen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Alle $countString Positionen anzeigen';
   }
 
   @override
@@ -19043,17 +19783,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takEventTileRelativeTimeHours(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
   String takEventTileRelativeTimeMinutes(int count) {
-    return 'vor ${count}min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}min';
   }
 
   @override
   String takEventTileRelativeTimeSeconds(int count) {
-    return 'vor ${count}s';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}s';
   }
 
   @override
@@ -19091,22 +19843,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takNavigateRelativeTimeDays(int count) {
-    return 'vor ${count}d';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}d';
   }
 
   @override
   String takNavigateRelativeTimeHours(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
   String takNavigateRelativeTimeMinutes(int count) {
-    return 'vor ${count}min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}min';
   }
 
   @override
   String takNavigateRelativeTimeSeconds(int count) {
-    return 'vor ${count}s';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}s';
   }
 
   @override
@@ -19845,13 +20613,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String telemetryPositionCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Positionen',
       one: 'Position',
     );
-    return '$count $_temp0';
+    return '$countString $_temp0';
   }
 
   @override
@@ -19865,7 +20637,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String telemetryPositionExportedCount(int count) {
-    return '$count Positionen exportiert';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Positionen exportiert';
   }
 
   @override
@@ -19905,7 +20681,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String telemetryPositionNodesCount(int count) {
-    return '$count Nodes';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nodes';
   }
 
   @override
@@ -19942,7 +20722,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String telemetryReadingsCount(int count) {
-    return '$count Messwerte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Messwerte';
   }
 
   @override
@@ -19990,7 +20774,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String telemetryTracerouteExportedCount(int count) {
-    return '$count Traceroutes exportiert';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Traceroutes exportiert';
   }
 
   @override
@@ -20230,7 +21018,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String widgetBuilderAddItemCount(int count) {
-    return 'Element hinzufügen ($count Elemente)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Element hinzufügen ($countString Elemente)';
   }
 
   @override
@@ -21180,12 +21972,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String widgetBuilderDaysAgo(int count) {
-    return 'vor ${count}T';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}T';
   }
 
   @override
   String widgetBuilderHoursAgo(int count) {
-    return 'vor ${count}h';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}h';
   }
 
   @override
@@ -21193,7 +21993,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String widgetBuilderMinutesAgo(int count) {
-    return 'vor ${count}m';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor ${countString}m';
   }
 
   @override
@@ -21379,7 +22183,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String widgetBuilderSwitchTemplateItemCount(int count, String dataType) {
-    return 'Sie haben $count $dataType ausgewählt.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Sie haben $countString $dataType ausgewählt.';
   }
 
   @override
@@ -21590,7 +22398,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String worldMeshFilterActiveCount(int count) {
-    return '$count aktiv';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString aktiv';
   }
 
   @override
@@ -21654,12 +22466,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String worldMeshFilterNodesWithBattery(int count) {
-    return '$count Nodes mit Akkudaten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nodes mit Akkudaten';
   }
 
   @override
   String worldMeshFilterNodesWithSensors(int count) {
-    return '$count Nodes mit Sensoren';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nodes mit Sensoren';
   }
 
   @override
@@ -21797,7 +22617,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String worldMeshMoreGateways(int count) {
-    return ' +$count weitere';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return ' +$countString weitere';
   }
 
   @override
@@ -21849,7 +22673,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String worldMeshSearchResultCount(int count) {
-    return '$count Ergebnisse';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Ergebnisse';
   }
 
   @override
@@ -21863,7 +22691,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String worldMeshSectionNeighbors(int count) {
-    return 'Nachbarn ($count)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Nachbarn ($countString)';
   }
 
   @override
@@ -21871,7 +22703,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String worldMeshSectionSeenBy(int count) {
-    return 'Gesehen von ($count Gateways)';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Gesehen von ($countString Gateways)';
   }
 
   @override
@@ -22073,7 +22909,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String remoteAdminNodesAvailable(int count) {
-    return '$count verfügbar';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString verfügbar';
   }
 
   @override
@@ -23083,12 +23923,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String helpCenterMoreTours(int count) {
-    return '+ $count weitere Touren';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '+ $countString weitere Touren';
   }
 
   @override
   String helpCenterStepsCount(int count) {
-    return '$count Schritte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Schritte';
   }
 
   @override
@@ -23154,7 +24002,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String storeForwardHistoryReturnMaxSubtitle(int count) {
-    return 'Maximal $count Nachrichten pro Anfrage';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Maximal $countString Nachrichten pro Anfrage';
   }
 
   @override
@@ -23197,7 +24049,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String geofenceNodesCount(int count) {
-    return '$count Nodes';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Nodes';
   }
 
   @override
@@ -23723,10 +24579,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String rangeTestPacketsHeard(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Pakete empfangen',
+      other: '$countString Pakete empfangen',
       one: '1 Paket empfangen',
       zero: 'Noch keine Pakete empfangen',
     );
@@ -23753,10 +24613,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String rangeTestPacketCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Pakete',
+      other: '$countString Pakete',
       one: '1 Paket',
     );
     return '$_temp0';
@@ -23825,10 +24689,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String rangeTestMissed(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Pakete verpasst',
+      other: '$countString Pakete verpasst',
       one: '1 Paket verpasst',
     );
     return '$_temp0';
@@ -25836,7 +26704,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String ringtoneBrowseCount(int count) {
-    return '$count Klingeltöne durchsuchen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Klingeltöne durchsuchen';
   }
 
   @override
@@ -25851,7 +26723,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String ringtoneShowAllBuiltIn(int count) {
-    return 'Alle $count integrierten Töne anzeigen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Alle $countString integrierten Töne anzeigen';
   }
 
   @override
@@ -25921,7 +26797,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String ringtoneLibrarySearchCount(int count) {
-    return '$count verfügbare Töne suchen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString verfügbare Töne suchen';
   }
 
   @override
@@ -26113,7 +26993,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String accountSubOneTimePurchases(int owned, int total) {
-    return 'Einmalige Käufe · $owned von $total';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Einmalige Käufe · $owned von $totalString';
   }
 
   @override
@@ -28386,7 +29270,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerRunningChecksProgress(int passed, int total) {
-    return 'Prüfungen werden ausgeführt... $passed/$total';
+    final intl.NumberFormat passedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String passedString = passedNumberFormat.format(passed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Prüfungen werden ausgeführt... $passedString/$totalString';
   }
 
   @override
@@ -28408,7 +29299,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerAllChecksPassed(int count) {
-    return 'Alle $count Prüfungen bestanden';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Alle $countString Prüfungen bestanden';
   }
 
   @override
@@ -28423,7 +29318,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerChecksFailedCount(int failed, int total) {
-    return '$failed von $total Prüfungen fehlgeschlagen';
+    final intl.NumberFormat failedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String failedString = failedNumberFormat.format(failed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$failedString von $totalString Prüfungen fehlgeschlagen';
   }
 
   @override
@@ -28475,7 +29377,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerSubscribedToTopics(int count) {
-    return '$count Thema(s) erfolgreich abonniert.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Thema(s) erfolgreich abonniert.';
   }
 
   @override
@@ -28578,7 +29484,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerActiveTopicsCount(int count) {
-    return '$count aktiv';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString aktiv';
   }
 
   @override
@@ -28633,7 +29543,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerActiveErrors(int count) {
-    return '$count aktiver Fehler';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString aktiver Fehler';
   }
 
   @override
@@ -28836,7 +29750,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String dashboardManageWidgetsPackHint(int count, String packName) {
-    return '$count Widgets durch Ihr $packName freigeschaltet';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Widgets durch Ihr $packName freigeschaltet';
   }
 
   @override
@@ -28856,7 +29774,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String dashboardOwnerDiscoverySubtitle(int count) {
-    return '$count bereit zum Hinzufügen: Umgebung, Mesh-Zustand, Karte und mehr';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString bereit zum Hinzufügen: Umgebung, Mesh-Zustand, Karte und mehr';
   }
 
   @override
@@ -28979,7 +29901,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerStepOf(String current, int total) {
-    return 'Schritt $current von $total';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Schritt $current von $totalString';
   }
 
   @override
@@ -29003,7 +29929,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String helpCenterProgressLabel(int completed, int total) {
-    return '$completed / $total';
+    final intl.NumberFormat completedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String completedString = completedNumberFormat.format(completed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$completedString / $totalString';
   }
 
   @override
@@ -29124,7 +30057,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String globalLayerNodesSeenVia(int count) {
-    return '$count Knoten über Global Layer gesehen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Knoten über Global Layer gesehen';
   }
 
   @override
@@ -30567,10 +31504,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String notificationBatchedNodesTitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count neue Nodes entdeckt',
+      other: '$countString neue Nodes entdeckt',
       one: '1 neuer Node entdeckt',
     );
     return '$_temp0';
@@ -31180,7 +32121,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationHistoryActionCount(int success, int total) {
-    return '$success von $total Aktionen erfolgreich';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$success von $totalString Aktionen erfolgreich';
   }
 
   @override
@@ -31195,17 +32140,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String automationConditionAllPassed(int count) {
-    return 'Alle $count Bedingungen erfüllt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Alle $countString Bedingungen erfüllt';
   }
 
   @override
   String automationConditionSomeFailed(int failed, int total) {
-    return '$failed von $total Bedingungen fehlgeschlagen';
+    final intl.NumberFormat failedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String failedString = failedNumberFormat.format(failed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$failedString von $totalString Bedingungen fehlgeschlagen';
   }
 
   @override
   String automationConditionSomeMatched(int matched, int total) {
-    return '$matched von $total Bedingungen erfüllt';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$matched von $totalString Bedingungen erfüllt';
   }
 
   @override
@@ -31345,7 +32305,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexMilestoneEncounterN(int count) {
-    return 'Begegnung #$count';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Begegnung #$countString';
   }
 
   @override
@@ -32167,7 +33131,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String sipSignalToneFull(int count, int max) {
-    return '$count/$max Noten • Phrase voll';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString/$max Noten • Phrase voll';
   }
 
   @override
@@ -32305,24 +33273,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String sipPeerDetailMinutesAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Minuten',
       one: 'Minute',
     );
-    return 'Vor $count $_temp0';
+    return 'Vor $countString $_temp0';
   }
 
   @override
   String sipPeerDetailHoursAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Stunden',
       one: 'Stunde',
     );
-    return 'Vor $count $_temp0';
+    return 'Vor $countString $_temp0';
   }
 
   @override
@@ -32479,7 +33455,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String sipHubPeerServiceMoreCount(int count) {
-    return '+$count';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '+$countString';
   }
 
   @override
@@ -32713,10 +33693,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCapacityNodeAgeMinutes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'vor $count Min.',
+      other: 'vor $countString Min.',
       one: 'vor 1 Min.',
     );
     return '$_temp0';
@@ -32724,10 +33708,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCapacityNodeAgeHours(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'vor $count Std.',
+      other: 'vor $countString Std.',
       one: 'vor 1 Std.',
     );
     return '$_temp0';
@@ -32738,10 +33726,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshCapacityNodeHopCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
     );
     return '$_temp0';
@@ -33100,13 +34092,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mrrpHarnessPeerServices(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
       other: 'Dienste',
       one: 'Dienst',
     );
-    return '$count $_temp0';
+    return '$countString $_temp0';
   }
 
   @override
@@ -33345,17 +34341,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mrrpHarnessFixtureSummary(int passed, int total) {
-    return '$passed/$total bestanden';
+    final intl.NumberFormat passedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String passedString = passedNumberFormat.format(passed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$passedString/$totalString bestanden';
   }
 
   @override
   String mrrpHarnessFixtureBytes(int count) {
-    return '$count Bytes';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Bytes';
   }
 
   @override
   String mrrpHarnessFixtureFieldsMatch(int matched, int total) {
-    return '$matched/$total Felder stimmen überein';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$matched/$totalString Felder stimmen überein';
   }
 
   @override
@@ -33378,7 +34389,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mrrpHarnessQaSteps(int count) {
-    return '$count Schritte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Schritte';
   }
 
   @override
@@ -33401,7 +34416,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mrrpHarnessQaSummary(int passed, int total) {
-    return '$passed/$total Szenarien bestanden';
+    final intl.NumberFormat passedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String passedString = passedNumberFormat.format(passed);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$passedString/$totalString Szenarien bestanden';
   }
 
   @override
@@ -33614,10 +34636,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshExplorerHopCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
     );
     return '$_temp0';
@@ -33746,12 +34772,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshExplorerFreshnessMinutes(int count) {
-    return 'vor $count Min.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Min.';
   }
 
   @override
   String meshExplorerFreshnessHours(int count) {
-    return 'vor $count Std.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Std.';
   }
 
   @override
@@ -33921,7 +34955,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String schemaFieldMoreItems(int count) {
-    return '$count weitere';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString weitere';
   }
 
   @override
@@ -33929,17 +34967,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String schemaFieldMinutesAgo(int count) {
-    return 'Vor ${count}Min';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Vor ${countString}Min';
   }
 
   @override
   String schemaFieldHoursAgo(int count) {
-    return 'Vor ${count}Std';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Vor ${countString}Std';
   }
 
   @override
   String schemaFieldDaysAgo(int count) {
-    return 'Vor ${count}T';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Vor ${countString}T';
   }
 
   @override
@@ -34083,12 +35133,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshServicesDurationMinutes(int count) {
-    return '$count Min.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Min.';
   }
 
   @override
   String meshServicesDurationHours(int count) {
-    return '$count Std.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Std.';
   }
 
   @override
@@ -34265,7 +35323,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mapTerrainProfileSampleCount(int count) {
-    return '$count Höhenmesswerte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Höhenmesswerte';
   }
 
   @override
@@ -34700,7 +35762,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String offlineDownloadEstimate(int count, String size) {
-    return '$count Kacheln · ~$size';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Kacheln · ~$size';
   }
 
   @override
@@ -34717,7 +35783,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String offlineDownloadProgress(int done, int total) {
-    return '$done von $total Kacheln';
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString von $totalString Kacheln';
   }
 
   @override
@@ -34725,7 +35799,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String offlineDownloadComplete(int count) {
-    return '$count Kacheln für die Offline-Nutzung gespeichert';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Kacheln für die Offline-Nutzung gespeichert';
   }
 
   @override
@@ -34803,7 +35881,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takBridgeConnectedClients(int count) {
-    return '$count verbunden';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString verbunden';
   }
 
   @override
@@ -34903,10 +35985,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String takVideoStreamCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Live-Streams',
+      other: '$countString Live-Streams',
       one: '1 Live-Stream',
     );
     return '$_temp0';
@@ -35145,12 +36231,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshIncidentReportCount(int count) {
-    return '$count Berichte';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Berichte';
   }
 
   @override
   String meshIncidentContributors(int count) {
-    return '$count Beitragende';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Beitragende';
   }
 
   @override
@@ -35420,10 +36514,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String avatarStackCoSeenLabel(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count kürzlich gemeinsam gesehene Knoten',
+      other: '$countString kürzlich gemeinsam gesehene Knoten',
       one: '1 kürzlich gemeinsam gesehener Knoten',
     );
     return '$_temp0';
@@ -35431,10 +36529,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String avatarStackOverflowLabel(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '+$count weitere',
+      other: '+$countString weitere',
       one: '+1 weitere',
     );
     return '$_temp0';
@@ -35445,10 +36547,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexCoSeenCardSubtitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten wurden zuletzt zusammen mit diesem Knoten gehört',
+      other:
+          '$countString Knoten wurden zuletzt zusammen mit diesem Knoten gehört',
       one: '1 Knoten wurde zuletzt zusammen mit diesem Knoten gehört',
     );
     return '$_temp0';
@@ -35720,22 +36827,42 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshServicesItemsCount(int count) {
-    return '$count Elemente';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Elemente';
   }
 
   @override
   String meshServicesChoicesCount(int count) {
-    return '$count Optionen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Optionen';
   }
 
   @override
   String meshServicesListProgress(int done, int total) {
-    return '$done von $total erledigt';
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString von $totalString erledigt';
   }
 
   @override
   String meshServicesMoreItemsCount(int count) {
-    return '$count weitere Elemente';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString weitere Elemente';
   }
 
   @override
@@ -35743,7 +36870,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshServicesPollVotesCount(int count) {
-    return '$count Stimmen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Stimmen';
   }
 
   @override
@@ -35815,10 +36946,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String messageTimelineSessionMessages(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Nachrichten',
+      other: '$countString Nachrichten',
       one: '1 Nachricht',
     );
     return '$_temp0';
@@ -35841,7 +36976,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String messageTimelineDetailDurationMinutes(int count) {
-    return '$count Min.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Min.';
   }
 
   @override
@@ -35877,7 +37016,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String tapbackDetailSenderCount(int count) {
-    return '$count Reaktionen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Reaktionen';
   }
 
   @override
@@ -36107,10 +37250,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String meshFeedPostCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Beiträge',
+      other: '$countString Beiträge',
       one: '1 Beitrag',
       zero: 'Keine Beiträge',
     );
@@ -36343,10 +37490,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String petAgeDaysLabel(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Tage alt',
+      other: '$countString Tage alt',
       one: '1 Tag alt',
       zero: 'Heute',
     );
@@ -36752,10 +37903,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String petTimelineEventCountPill(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Ereignisse',
+      other: '$countString Ereignisse',
       one: '1 Ereignis',
     );
     return '$_temp0';
@@ -36777,7 +37932,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String petTimelineGroupedCount(int count) {
-    return '$count×';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString×';
   }
 
   @override
@@ -37084,7 +38243,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String reticulumReplayProgress(int current, int total) {
-    return 'Eintrag $current von $total';
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Eintrag $current von $totalString';
   }
 
   @override
@@ -37165,12 +38328,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String reticulumLibraryRecords(int count) {
-    return '$count Einträge';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Einträge';
   }
 
   @override
   String reticulumLibrarySources(int count) {
-    return '$count Quellen';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString Quellen';
   }
 
   @override
@@ -37780,10 +38951,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexConstellationHopsCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
     );
     return '$_temp0';
@@ -37796,22 +38971,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexConstellationEncounterTotal(int count) {
-    return '$count gesamt';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString gesamt';
   }
 
   @override
   String nodedexConstellationMessagesExchanged(int count) {
-    return '$count ausgetauscht';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString ausgetauscht';
   }
 
   @override
   String nodedexConstellationMonthsAgo(int count) {
-    return 'vor $count Mon.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString Mon.';
   }
 
   @override
   String nodedexConstellationYearsAgo(int count) {
-    return 'vor $count J.';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'vor $countString J.';
   }
 
   @override
@@ -37845,10 +39036,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String nodedexHopsAwayValue(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Hops',
+      other: '$countString Hops',
       one: '1 Hop',
       zero: 'Direkt',
     );
@@ -37943,7 +39138,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String operationCardProgressSubtitle(int completed, int target) {
-    return '$completed / $target Fortschritt';
+    final intl.NumberFormat completedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String completedString = completedNumberFormat.format(completed);
+
+    return '$completedString / $target Fortschritt';
   }
 
   @override
@@ -38106,10 +39305,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String presenceEncounterSummary(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count-mal gesehen',
+      other: '$countString-mal gesehen',
       one: 'Erste Begegnung',
     );
     return '$_temp0';
@@ -38123,10 +39326,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String presenceFirstSeenDaysAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Vor $count Tagen zum ersten Mal gesehen',
+      other: 'Vor $countString Tagen zum ersten Mal gesehen',
       one: 'Vor 1 Tag zum ersten Mal gesehen',
     );
     return '$_temp0';
@@ -38134,10 +39341,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String presenceFirstSeenWeeksAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Vor $count Wochen zum ersten Mal gesehen',
+      other: 'Vor $countString Wochen zum ersten Mal gesehen',
       one: 'Vor 1 Woche zum ersten Mal gesehen',
     );
     return '$_temp0';
@@ -38145,10 +39356,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String presenceFirstSeenMonthsAgo(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Vor $count Monaten zum ersten Mal gesehen',
+      other: 'Vor $countString Monaten zum ersten Mal gesehen',
       one: 'Vor 1 Monat zum ersten Mal gesehen',
     );
     return '$_temp0';
@@ -38249,10 +39464,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String licenseOrgMembersCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Mitglieder',
+      other: '$countString Mitglieder',
       one: '1 Mitglied',
       zero: 'Keine Mitglieder',
     );
@@ -40022,10 +41241,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String removeStaleNodesCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten werden entfernt',
+      other: '$countString Knoten werden entfernt',
       one: '1 Knoten wird entfernt',
       zero: 'Keine Knoten zu entfernen',
     );
@@ -40034,10 +41257,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String removeStaleNodesConfirmTitle(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten entfernen?',
+      other: '$countString Knoten entfernen?',
       one: '1 Knoten entfernen?',
     );
     return '$_temp0';
@@ -40053,15 +41280,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String removeStaleNodesProgress(int done, int total) {
-    return '$done von $total Knoten werden entfernt';
+    final intl.NumberFormat doneNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String doneString = doneNumberFormat.format(done);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$doneString von $totalString Knoten werden entfernt';
   }
 
   @override
   String removeStaleNodesRemoved(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten entfernt.',
+      other: '$countString Knoten entfernt.',
       one: '1 Knoten entfernt.',
     );
     return '$_temp0';
@@ -40069,10 +41308,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String removeStaleNodesFailed(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten konnten nicht entfernt werden.',
+      other: '$countString Knoten konnten nicht entfernt werden.',
       one: '1 Knoten konnte nicht entfernt werden.',
     );
     return '$_temp0';
@@ -40103,10 +41346,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mqttTopicFinderFinished(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Fertig: $count Nachrichten empfangen',
+      other: 'Fertig: $countString Nachrichten empfangen',
       one: 'Fertig: 1 Nachricht empfangen',
     );
     return '$_temp0';
@@ -40180,10 +41427,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mqttTopicFinderNodeCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Knoten',
+      other: '$countString Knoten',
       one: '1 Knoten',
     );
     return '$_temp0';
@@ -40191,7 +41442,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String mqttTopicFinderNodeCountAtLeast(int count) {
-    return '$count+ Knoten';
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString+ Knoten';
   }
 
   @override
