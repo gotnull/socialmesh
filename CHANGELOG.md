@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Each radio's node list is now kept in its own encrypted database, one entry per node, instead of one long text value in the app's settings that was rewritten in full on every change. Saving a few nodes on a large mesh no longer rewrites them all, and the app no longer loads every node through its settings at launch. Existing node lists move across the first time each radio connects.
 - Shake to report a bug samples the phone's motion sensor about 15 times a second instead of 50 while the app is open, so it uses less battery. A firm shake still opens the report.
+- A first connect to a radio or MQTT feed with thousands of nodes fills the node list about five times faster: a 20,000-node radio now takes about 3 seconds instead of about 15. Nodes arriving in a burst are added a few times a second rather than one at a time, and a single new node still appears straight away.
 
 ## [1.84.0] - 2026-11-25
 

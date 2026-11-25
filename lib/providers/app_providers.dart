@@ -6313,7 +6313,8 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   /// [AppFeatureFlags.isNodeEmissionCoalescingEnabled]). Non-structural
   /// per-packet updates pend here and commit in one state write per
   /// window; structural events (new node, own node, position change)
-  /// flush synchronously so discovery and map latency are unchanged.
+  /// flush synchronously so discovery and map latency are unchanged,
+  /// up to a per-window budget that a NodeDB replay exceeds.
   /// Side effects (saves, counters, IFTTT, automations) stay per-event
   /// and never depend on the flush. Every other state writer in this
   /// class must flush pending writes first to preserve write ordering,
@@ -6322,6 +6323,27 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
   final Map<int, MeshNode> _pendingNodeWrites = {};
   Timer? _coalesceTimer;
   static const _coalesceWindow = Duration(milliseconds: 250);
+
+  // Every commit copies the whole node map and every listener revisits
+  // it, so a NodeDB replay of thousands of new nodes committing one by
+  // one is quadratic. Structural events beyond this many per coalesce
+  // window pend like telemetry; ordinary traffic never reaches it, so an
+  // isolated discovery or position change still commits at once.
+  static const _maxStructuralCommitsPerWindow = 4;
+  final Stopwatch _structuralWindow = Stopwatch();
+  int _structuralCommits = 0;
+
+  bool _takeStructuralCommit() {
+    if (!_structuralWindow.isRunning ||
+        _structuralWindow.elapsed >= _coalesceWindow) {
+      _structuralWindow
+        ..reset()
+        ..start();
+      _structuralCommits = 0;
+    }
+    _structuralCommits++;
+    return _structuralCommits <= _maxStructuralCommitsPerWindow;
+  }
 
   void _flushPendingNodeWrites() {
     _coalesceTimer?.cancel();
@@ -6787,14 +6809,15 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
       // Structural events commit synchronously so discovery overlays and
       // map markers keep today's latency; pure lastHeard/RSSI/telemetry
-      // churn coalesces into one emission per window. With the flag off
+      // churn coalesces into one emission per window, as does a burst of
+      // structural events past the per-window budget. With the flag off
       // every event commits synchronously, which is the pre-coalescing
       // behavior verbatim.
       final flushNow =
           !AppFeatureFlags.isNodeEmissionCoalescingEnabled ||
-          isNewNode ||
           isOwnNode ||
-          (node.hasPosition && positionChanged);
+          ((isNewNode || (node.hasPosition && positionChanged)) &&
+              _takeStructuralCommit());
       _pendingNodeWrites[node.nodeNum] = node;
       if (flushNow) {
         _flushPendingNodeWrites();

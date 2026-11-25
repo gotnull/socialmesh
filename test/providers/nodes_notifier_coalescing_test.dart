@@ -3,6 +3,8 @@
 
 // Pins the flag-gated node-emission coalescing contract:
 // - structural events (new node, position change) flush synchronously,
+//   up to a per-window budget, so a NodeDB replay does not commit once
+//   per node,
 // - pure telemetry/lastHeard churn coalesces into one emission per
 //   window, merging consecutive packets against the freshest pending
 //   value,
@@ -156,6 +158,27 @@ class _Harness {
     await Future<void>.delayed(const Duration(milliseconds: 30));
   }
 
+  /// A NodeDB replay: [count] new nodes back to back, with no pause
+  /// between packets.
+  Future<void> injectNodeInfoBurst(int firstNodeNum, int count) async {
+    for (var i = 0; i < count; i++) {
+      final nodeNum = firstNodeNum + i;
+      await protocol.handleIncomingPacket(
+        pb.FromRadio(
+          nodeInfo: pb.NodeInfo(
+            num: nodeNum,
+            user: pb.User(
+              id: '!${nodeNum.toRadixString(16)}',
+              longName: 'Node $nodeNum',
+              shortName: 'N$nodeNum',
+            ),
+          ),
+        ).writeToBuffer(),
+      );
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+  }
+
   Future<void> injectNodeInfo(
     int nodeNum, {
     double? latitude,
@@ -277,6 +300,34 @@ void main() {
       h.nodes[_peer]!.latitude,
       closeTo(-37.81, 0.0001),
       reason: 'Position updates must keep today\'s map latency.',
+    );
+  });
+
+  test('a burst of new nodes commits a few times per window, not once '
+      'per node, and every node lands', () async {
+    final h = await _Harness.create();
+    addTearDown(h.dispose);
+
+    const burst = 200;
+    final elapsed = Stopwatch()..start();
+    await h.injectNodeInfoBurst(0x10000, burst);
+    // A slow machine spreads the burst over more windows; each window
+    // allows the structural budget plus one timer flush.
+    final windows = elapsed.elapsedMilliseconds ~/ 250 + 1;
+    expect(
+      h.emissions,
+      lessThanOrEqualTo(windows * 5),
+      reason:
+          'Each commit copies the whole node map; one per node makes a '
+          'large replay quadratic.',
+    );
+    expect(h.emissions, lessThan(burst));
+
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    expect(
+      [for (var i = 0; i < burst; i++) h.nodes.containsKey(0x10000 + i)],
+      everyElement(isTrue),
+      reason: 'Nodes past the budget must still commit within the window.',
     );
   });
 
