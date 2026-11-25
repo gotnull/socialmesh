@@ -1559,6 +1559,9 @@ class NodeStorageService {
     await backend?.close();
   }
 
+  /// False once [close] has run, until the next [init].
+  bool get isOpen => _backend != null;
+
   _NodeBackend get _store {
     final backend = _backend;
     if (backend == null) {

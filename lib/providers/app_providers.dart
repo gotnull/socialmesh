@@ -6702,6 +6702,23 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     }
     state = updatedState;
 
+    // A first connect promotes the provisional scope once the radio
+    // identifies, closing the store while the node replay is still
+    // arriving; saves aimed at the closed store are lost. The radio's
+    // nodes are saved again here, into the store opened for its scope.
+    // The protocol clears its nodes with its node number at the start of
+    // each connection, so a matching number means every node is this
+    // radio's.
+    final protocolNodeNum = protocol.myNodeNum;
+    if (_storage?.isOpen == true &&
+        protocolNodeNum != null &&
+        RadioScope.instance.connectedKey ==
+            radioScopeKeyForNodeNum(protocolNodeNum)) {
+      for (final nodeNum in protocolNodes.keys) {
+        _scheduleSave(updatedState[nodeNum]!);
+      }
+    }
+
     // Compute distances now that all nodes (including myNode) are loaded.
     final myNodeNum = ref.read(myNodeNumProvider);
     if (myNodeNum != null) {
