@@ -1704,6 +1704,26 @@ class _NodeCard extends ConsumerWidget {
                 ),
                 SizedBox(height: AppTheme.spacing4),
               ],
+              // Hardware model, once the node has announced it
+              if (node.hardwareModel != null) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.memory, size: 14, color: context.textTertiary),
+                    SizedBox(width: AppTheme.spacing6),
+                    Flexible(
+                      child: Text(
+                        node.hardwareModel!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.textTertiary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppTheme.spacing4),
+              ],
               // Role and GPS status
               Row(
                 children: [
