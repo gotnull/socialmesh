@@ -49,6 +49,7 @@ class ScopedDatabaseFile {
 /// `nodeboard_cache.db`, `operations.db`, `incidents.db`, `tasks.db`.
 const List<ScopedDatabaseFile> kRadioScopedDatabases = [
   ScopedDatabaseFile('messages.db'),
+  ScopedDatabaseFile('nodes.db'),
   ScopedDatabaseFile('telemetry.db'),
   ScopedDatabaseFile('routes.db'),
   ScopedDatabaseFile('traceroute_history.db'),

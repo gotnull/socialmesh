@@ -200,6 +200,17 @@ Future<_Harness> _makeHarness({
   );
 }
 
+// The harness hands every scope the store it opened at the start, while the
+// app opens a fresh one per radio scope. What a radio sees after a switch is
+// a store opened in the now-current scope.
+Future<List<MeshNode>> _storedInCurrentScope() async {
+  final store = NodeStorageService();
+  await store.init();
+  final nodes = await store.loadNodes();
+  await store.close();
+  return nodes;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -300,8 +311,10 @@ void main() {
             'Cross-transport device switch must wipe in-memory nodes so '
             'radio A stale cache does not leak into radio B session',
       );
-      final stored = await h.nodeStorage.loadNodes();
-      expect(stored, hasLength(0));
+      // The new radio starts empty; the previous radio's nodes stay in its
+      // own scope instead of being deleted.
+      expect(await _storedInCurrentScope(), hasLength(0));
+      expect(await h.nodeStorage.loadNodes(), hasLength(3));
 
       expect(h.settings.lastDeviceId, 'AA:BB:CC:DD:EE:99');
       expect(h.settings.lastDeviceType, 'ble');
@@ -336,7 +349,7 @@ void main() {
         expect(transition.kind, DeviceTransitionKind.deviceSwitch);
         expect(transition.clearNodes, isTrue);
         expect(h.container.read(nodesProvider).length, 0);
-        expect(await h.nodeStorage.loadNodes(), hasLength(0));
+        expect(await _storedInCurrentScope(), hasLength(0));
         expect(h.container.read(transportTypeProvider), TransportType.network);
 
         // Network host/port seeded so transportProvider rebuilds with the
@@ -590,7 +603,7 @@ void main() {
             'Stale _init loadNodes writeback must be abandoned when a '
             'destructive clear fires during its await',
       );
-      expect(await h.nodeStorage.loadNodes(), hasLength(0));
+      expect(await _storedInCurrentScope(), hasLength(0));
     });
   });
 }

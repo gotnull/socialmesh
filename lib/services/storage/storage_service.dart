@@ -2,9 +2,12 @@
 // SPDX-FileCopyrightText: 2025-2026 gotnull (developer@socialmesh.app)
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../core/logging.dart';
 import '../../core/radio_scope.dart';
@@ -15,6 +18,7 @@ import '../../models/tapback.dart';
 import '../../utils/text_sanitizer.dart';
 import '../../utils/location_privacy.dart';
 import 'database_key_service.dart';
+import 'encrypted_database.dart';
 import 'message_database.dart';
 
 /// Secure storage service for sensitive data
@@ -1484,99 +1488,149 @@ class DeviceFavoritesService {
 
 /// Node storage service - persists nodes and positions locally
 class NodeStorageService {
-  SharedPreferences? _prefs;
-
   /// Radio-scoped: the node cache describes one mesh as seen through one
   /// radio. Sharing it across radios unions two meshes into one list.
-  static String get _nodesKey => RadioScope.instance.prefsKey('nodes');
+  static const String _dbName = 'nodes.db';
+  static const int _dbVersion = 1;
+
+  // Older builds kept every node of a radio as one JSON string under this
+  // preference key, rewritten whole on every save. Read only to migrate.
+  static const String _legacyBase = 'nodes';
+
+  // Writes stay under SQLite's bound-variable limit.
+  static const int _chunk = 500;
+
+  static _NodeBackend Function()? _testBackend;
+  _NodeBackend? _backend;
 
   NodeStorageService();
 
-  Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
+  /// Every store opened after this keeps nodes in memory, per radio scope.
+  /// Widget tests run under fake async, where a real database never
+  /// answers.
+  @visibleForTesting
+  static void debugUseInMemory() {
+    _MemoryNodeBackend.reset();
+    _testBackend = _MemoryNodeBackend.new;
   }
 
-  SharedPreferences get _preferences {
-    if (_prefs == null) {
-      throw Exception('NodeStorageService not initialized');
+  /// Every store opened after this uses a database at the path [path]
+  /// returns, opened with [factory] (the ffi factory in tests).
+  @visibleForTesting
+  static void debugUseDatabase(
+    DatabaseFactory factory,
+    Future<String> Function() path,
+  ) {
+    _testBackend = () => _SqliteNodeBackend.pending(
+      path().then(
+        (p) => factory.openDatabase(
+          p,
+          options: OpenDatabaseOptions(
+            version: _dbVersion,
+            onCreate: _SqliteNodeBackend.createTable,
+            singleInstance: false,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Opens the current radio scope's node database, moving across any
+  /// nodes an older build left in preferences.
+  Future<void> init() async {
+    final make = _testBackend;
+    final backend =
+        make?.call() ??
+        _SqliteNodeBackend(
+          await openEncryptedDatabase(
+            await RadioScope.instance.databasePath(_dbName),
+            version: _dbVersion,
+            onCreate: _SqliteNodeBackend.createTable,
+          ),
+        );
+    _backend = backend;
+    await _migrateFromPreferences(backend);
+  }
+
+  /// Closes the database; the provider calls this when the scope changes.
+  Future<void> close() async {
+    final backend = _backend;
+    _backend = null;
+    await backend?.close();
+  }
+
+  _NodeBackend get _store {
+    final backend = _backend;
+    if (backend == null) {
+      throw StateError('NodeStorageService not initialized');
     }
-    return _prefs!;
+    return backend;
+  }
+
+  // Copies the legacy JSON list into the database, keeping any node the
+  // database already has (a migration cut short is finished, never
+  // duplicated), then removes the key. An unreadable value stays for the
+  // next attempt.
+  Future<void> _migrateFromPreferences(_NodeBackend backend) async {
+    final prefs = await SharedPreferences.getInstance();
+    final scope = RadioScope.instance;
+    final raw = scope.readScoped(_legacyBase, prefs.getString);
+    if (raw == null) return;
+    final List<MeshNode> nodes;
+    try {
+      nodes = [
+        for (final j in jsonDecode(raw) as List)
+          _nodeFromJson(j as Map<String, dynamic>),
+      ];
+    } catch (e) {
+      AppLogging.storage('event=nodes.migrate.unreadable reason=$e');
+      return;
+    }
+    await backend.insertMissing({
+      for (final n in nodes) n.nodeNum: jsonEncode(_nodeToJson(n)),
+    });
+    await prefs.remove(scope.prefsKey(_legacyBase));
+    if (scope.currentKey == kLegacyRadioScopeKey) {
+      await prefs.remove(_legacyBase);
+    }
+    AppLogging.storage('event=nodes.migrated count=${nodes.length}');
   }
 
   /// Save a node to local storage
-  Future<void> saveNode(MeshNode node) async {
-    try {
-      final nodes = await loadNodes();
-      // Update existing node or add new
-      final index = nodes.indexWhere((n) => n.nodeNum == node.nodeNum);
-      if (index >= 0) {
-        // Preserve position if new node doesn't have one
-        if (!node.hasPosition && nodes[index].hasPosition) {
-          node = node.copyWith(
-            latitude: nodes[index].latitude,
-            longitude: nodes[index].longitude,
-            altitude: nodes[index].altitude,
-          );
-        }
-        // Preserve firstHeard from existing node
-        if (nodes[index].firstHeard != null && node.firstHeard == null) {
-          node = node.copyWith(firstHeard: nodes[index].firstHeard);
-        }
-        nodes[index] = node;
-      } else {
-        // New node - set firstHeard to now if not already set
-        if (node.firstHeard == null) {
-          node = node.copyWith(firstHeard: DateTime.now());
-        }
-        nodes.add(node);
-      }
+  Future<void> saveNode(MeshNode node) => saveNodes([node]);
 
-      final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
-      await _preferences.setString(_nodesKey, jsonEncode(jsonList));
-      AppLogging.debug('Saved node ${node.nodeNum} to storage');
-    } catch (e) {
-      AppLogging.storage('Error saving node: $e');
-    }
-  }
-
-  /// Save multiple nodes to local storage
+  /// Saves [nodesToSave], keeping a stored position or first-heard time
+  /// when the incoming node lacks one. Only these nodes are written.
   Future<void> saveNodes(List<MeshNode> nodesToSave) async {
+    if (nodesToSave.isEmpty) return;
     try {
-      final existingNodes = await loadNodes();
-      final nodeMap = <int, MeshNode>{};
-
-      // Start with existing nodes
-      for (final node in existingNodes) {
-        nodeMap[node.nodeNum] = node;
-      }
-
-      // Update with new nodes, preserving positions and firstHeard when needed
+      final store = _store;
+      final existing = await store.read({
+        for (final n in nodesToSave) n.nodeNum,
+      });
+      final rows = <int, String>{};
       for (var node in nodesToSave) {
-        final existing = nodeMap[node.nodeNum];
-        if (existing != null) {
-          // Preserve position if new node doesn't have one
-          if (!node.hasPosition && existing.hasPosition) {
+        final storedBody = existing[node.nodeNum];
+        final stored = storedBody == null
+            ? null
+            : _nodeFromJson(jsonDecode(storedBody) as Map<String, dynamic>);
+        if (stored != null) {
+          if (!node.hasPosition && stored.hasPosition) {
             node = node.copyWith(
-              latitude: existing.latitude,
-              longitude: existing.longitude,
-              altitude: existing.altitude,
+              latitude: stored.latitude,
+              longitude: stored.longitude,
+              altitude: stored.altitude,
             );
           }
-          // Preserve firstHeard from existing node
-          if (existing.firstHeard != null && node.firstHeard == null) {
-            node = node.copyWith(firstHeard: existing.firstHeard);
+          if (stored.firstHeard != null && node.firstHeard == null) {
+            node = node.copyWith(firstHeard: stored.firstHeard);
           }
-        } else {
-          // New node - set firstHeard to now if not already set
-          if (node.firstHeard == null) {
-            node = node.copyWith(firstHeard: DateTime.now());
-          }
+        } else if (node.firstHeard == null) {
+          node = node.copyWith(firstHeard: DateTime.now());
         }
-        nodeMap[node.nodeNum] = node;
+        rows[node.nodeNum] = jsonEncode(_nodeToJson(node));
       }
-
-      final jsonList = nodeMap.values.map((n) => _nodeToJson(n)).toList();
-      await _preferences.setString(_nodesKey, jsonEncode(jsonList));
+      await store.write(rows);
       AppLogging.debug('Saved ${nodesToSave.length} nodes to storage');
     } catch (e) {
       AppLogging.storage('Error saving nodes: $e');
@@ -1586,18 +1640,10 @@ class NodeStorageService {
   /// Load all nodes from local storage
   Future<List<MeshNode>> loadNodes() async {
     try {
-      final jsonString = RadioScope.instance.readScoped(
-        'nodes',
-        _preferences.getString,
-      );
-      if (jsonString == null || jsonString.isEmpty) {
-        return [];
-      }
-
-      final jsonList = jsonDecode(jsonString) as List;
-      return jsonList
-          .map((j) => _nodeFromJson(j as Map<String, dynamic>))
-          .toList();
+      return [
+        for (final body in await _store.readAll())
+          _nodeFromJson(jsonDecode(body) as Map<String, dynamic>),
+      ];
     } catch (e) {
       AppLogging.storage('Error loading nodes: $e');
       return [];
@@ -1607,8 +1653,10 @@ class NodeStorageService {
   /// Get a specific node from storage
   Future<MeshNode?> getNode(int nodeNum) async {
     try {
-      final nodes = await loadNodes();
-      return nodes.where((n) => n.nodeNum == nodeNum).firstOrNull;
+      final body = (await _store.read({nodeNum}))[nodeNum];
+      return body == null
+          ? null
+          : _nodeFromJson(jsonDecode(body) as Map<String, dynamic>);
     } catch (e) {
       AppLogging.storage('Error getting node: $e');
       return null;
@@ -1618,21 +1666,18 @@ class NodeStorageService {
   /// Clear all nodes
   Future<void> clearNodes() async {
     try {
-      await _preferences.remove(_nodesKey);
+      await _store.clear();
       AppLogging.storage('Cleared all nodes');
     } catch (e) {
       AppLogging.storage('Error clearing nodes: $e');
     }
   }
 
-  /// Delete [nodeNums] from storage in one read and one write.
+  /// Delete [nodeNums] from storage.
   Future<void> deleteNodes(Set<int> nodeNums) async {
     if (nodeNums.isEmpty) return;
     try {
-      final nodes = await loadNodes();
-      nodes.removeWhere((n) => nodeNums.contains(n.nodeNum));
-      final jsonList = nodes.map((n) => _nodeToJson(n)).toList();
-      await _preferences.setString(_nodesKey, jsonEncode(jsonList));
+      await _store.delete(nodeNums);
       AppLogging.storage('Deleted ${nodeNums.length} node(s) from storage');
     } catch (e) {
       AppLogging.storage('Error deleting ${nodeNums.length} node(s): $e');
@@ -1883,4 +1928,137 @@ class NodeStorageService {
       hasXeddsa: json['hasXeddsa'] as bool? ?? false,
     );
   }
+}
+
+/// Where [NodeStorageService] keeps its rows: one JSON body per node.
+abstract class _NodeBackend {
+  Future<Map<int, String>> read(Set<int> nodeNums);
+  Future<List<String>> readAll();
+  Future<void> write(Map<int, String> rows);
+  Future<void> insertMissing(Map<int, String> rows);
+  Future<void> delete(Set<int> nodeNums);
+  Future<void> clear();
+  Future<void> close();
+}
+
+class _SqliteNodeBackend implements _NodeBackend {
+  _SqliteNodeBackend(Database db) : _db = Future.value(db);
+  _SqliteNodeBackend.pending(this._db);
+
+  final Future<Database> _db;
+
+  static Future<void> createTable(Database db, int version) => db.execute(
+    'CREATE TABLE nodes (node_num INTEGER PRIMARY KEY, body TEXT NOT NULL)',
+  );
+
+  static Iterable<List<int>> _chunks(Iterable<int> nums) sync* {
+    final all = nums.toList();
+    for (var i = 0; i < all.length; i += NodeStorageService._chunk) {
+      yield all.sublist(i, min(i + NodeStorageService._chunk, all.length));
+    }
+  }
+
+  @override
+  Future<Map<int, String>> read(Set<int> nodeNums) async {
+    final db = await _db;
+    final out = <int, String>{};
+    for (final chunk in _chunks(nodeNums)) {
+      final rows = await db.query(
+        'nodes',
+        where: 'node_num IN (${List.filled(chunk.length, '?').join(',')})',
+        whereArgs: chunk,
+      );
+      for (final r in rows) {
+        out[r['node_num']! as int] = r['body']! as String;
+      }
+    }
+    return out;
+  }
+
+  @override
+  Future<List<String>> readAll() async {
+    final rows = await (await _db).query('nodes', columns: ['body']);
+    return [for (final r in rows) r['body']! as String];
+  }
+
+  Future<void> _put(Map<int, String> rows, ConflictAlgorithm onConflict) async {
+    if (rows.isEmpty) return;
+    await (await _db).transaction((txn) async {
+      final batch = txn.batch();
+      rows.forEach((nodeNum, body) {
+        batch.insert('nodes', {
+          'node_num': nodeNum,
+          'body': body,
+        }, conflictAlgorithm: onConflict);
+      });
+      await batch.commit(noResult: true);
+    });
+  }
+
+  @override
+  Future<void> write(Map<int, String> rows) =>
+      _put(rows, ConflictAlgorithm.replace);
+
+  @override
+  Future<void> insertMissing(Map<int, String> rows) =>
+      _put(rows, ConflictAlgorithm.ignore);
+
+  @override
+  Future<void> delete(Set<int> nodeNums) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      for (final chunk in _chunks(nodeNums)) {
+        await txn.delete(
+          'nodes',
+          where: 'node_num IN (${List.filled(chunk.length, '?').join(',')})',
+          whereArgs: chunk,
+        );
+      }
+    });
+  }
+
+  @override
+  Future<void> clear() async => (await _db).delete('nodes');
+
+  @override
+  Future<void> close() async => (await _db).close();
+}
+
+// Rows per radio scope, so scope isolation behaves as it does on disk.
+class _MemoryNodeBackend implements _NodeBackend {
+  _MemoryNodeBackend() : _scope = RadioScope.instance.currentKey;
+
+  static final Map<String, Map<int, String>> _byScope = {};
+  static void reset() => _byScope.clear();
+
+  final String _scope;
+  Map<int, String> get _rows => _byScope.putIfAbsent(_scope, () => {});
+
+  @override
+  Future<Map<int, String>> read(Set<int> nodeNums) async => {
+    for (final n in nodeNums)
+      if (_rows[n] case final body?) n: body,
+  };
+
+  @override
+  Future<List<String>> readAll() async => _rows.values.toList();
+
+  @override
+  Future<void> write(Map<int, String> rows) async => _rows.addAll(rows);
+
+  @override
+  Future<void> insertMissing(Map<int, String> rows) async {
+    rows.forEach((n, body) => _rows.putIfAbsent(n, () => body));
+  }
+
+  @override
+  Future<void> delete(Set<int> nodeNums) async =>
+      _rows.removeWhere((n, _) => nodeNums.contains(n));
+
+  @override
+  Future<void> clear() async => _rows.clear();
+
+  // Rows outlive a close, as a database file outlives its handle.
+  @override
+  Future<void> close() => Future.value();
 }

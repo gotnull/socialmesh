@@ -762,6 +762,7 @@ final nodeStorageProvider = FutureProvider<NodeStorageService>((ref) async {
   ref.watch(radioScopeProvider);
   final service = NodeStorageService();
   await service.init();
+  bindStoreToRadioScope(ref, service, service.close);
   return service;
 });
 
