@@ -1,0 +1,6 @@
+{
+  "app_store_whats_new": "Searching Settings for Clear Stale Nodes now shows its After x Days slider while the setting is on, the same as the full Settings list.\n\nThe Devices screen used to say a saved Wi-Fi or USB radio was not found after every Bluetooth scan that didn't list it, even though a Bluetooth scan can never list a Wi-Fi or USB radio and the radio itself was often working fine. That warning is gone. When such a radio really can't be reached, the advice now matches how it connects.\n\nThe app now uses version 2.8.3 of the Meshtastic protocol definitions. If your radio has its FEM LNA set to automatic, Radio Configuration says so instead of claiming the radio has none.",
+  "play": {
+    "en-GB": "Searching Settings for Clear Stale Nodes now shows its After x Days slider.\nA saved Wi-Fi or USB radio is no longer reported as not found after a Bluetooth scan.\nUpdated to Meshtastic protocol definitions 2.8.3; a FEM LNA set to automatic is shown as automatic."
+  }
+}
