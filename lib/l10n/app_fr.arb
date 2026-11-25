@@ -10813,6 +10813,7 @@
   "paymentChooserStripeLabel": "Payer avec Stripe",
   "paymentChooserStripeSubtitle": "Carte ou Apple Pay via Stripe",
   "paymentChooserTitle": "Choisir le mode de paiement",
+  "paymentChooserAlreadyOwned": "Vous possédez déjà {productName}.",
   "restorePurchasesSignInForExternal": "Aucun achat App Store trouvé. Connectez-vous pour aussi restaurer les packs Stripe et Buy Me a Coffee.",
   "scannerUnsupportedBleDescription": "Cette version s'exécute sur une plateforme sans radio Bluetooth. Connectez un appareil compatible SocialMesh via le réseau à la place.",
   "scannerUnsupportedBleTitle": "BLE indisponible",

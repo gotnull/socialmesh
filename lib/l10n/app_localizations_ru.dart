@@ -22462,6 +22462,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paymentChooserTitle => 'Выберите способ оплаты';
 
   @override
+  String paymentChooserAlreadyOwned(String productName) {
+    return 'У вас уже есть $productName.';
+  }
+
+  @override
   String get paymentChooserStoreLabelApple => 'Оплатить через App Store';
 
   @override

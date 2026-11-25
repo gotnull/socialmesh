@@ -22507,6 +22507,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paymentChooserTitle => 'Zahlungsmethode wählen';
 
   @override
+  String paymentChooserAlreadyOwned(String productName) {
+    return 'Sie besitzen $productName bereits.';
+  }
+
+  @override
   String get paymentChooserStoreLabelApple => 'Über App Store bezahlen';
 
   @override

@@ -22477,6 +22477,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get paymentChooserTitle => 'Виберіть спосіб оплати';
 
   @override
+  String paymentChooserAlreadyOwned(String productName) {
+    return 'У вас уже є $productName.';
+  }
+
+  @override
   String get paymentChooserStoreLabelApple => 'Оплатити через App Store';
 
   @override

@@ -38628,6 +38628,12 @@ abstract class AppLocalizations {
   /// **'Choose payment method'**
   String get paymentChooserTitle;
 
+  /// Shown instead of the payment chooser when the user taps buy on a pack they already own, through either payment method or the Complete Pack. Nothing is charged.
+  ///
+  /// In en, this message translates to:
+  /// **'You already own {productName}.'**
+  String paymentChooserAlreadyOwned(String productName);
+
   /// Row label on iOS: routes the purchase through RevenueCat / App Store IAP.
   ///
   /// In en, this message translates to:

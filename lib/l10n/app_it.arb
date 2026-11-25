@@ -26974,6 +26974,7 @@
   "aetherValidationVerified": "Volo verificato nei registri OpenSky",
   "albumRarityPageTitle": "Carte {rarity}",
   "paymentChooserTitle": "Scegli metodo di pagamento",
+  "paymentChooserAlreadyOwned": "Possiedi già {productName}.",
   "paymentChooserStoreLabelApple": "Paga tramite App Store",
   "paymentChooserStoreLabelGoogle": "Paga tramite Google Play",
   "paymentChooserStoreLabelGeneric": "Paga tramite store",

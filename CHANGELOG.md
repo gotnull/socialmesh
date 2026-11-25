@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Buying a pack you already own no longer opens the payment options. The App Store or Google Play and Stripe were offered side by side even when the pack was already unlocked through the other one, or through the Complete Pack, so it could be paid for twice. The app now says you already own it and charges nothing.
+
 - Resend now works on a direct message that only a relay node acknowledged. Tapping it used to do nothing visible: the message went out again, but its bubble kept showing the relay's tick. It now shows the new attempt and its outcome. A message the recipient has already confirmed is never sent again.
 - After you disconnect from a MeshCore radio over Bluetooth, the Devices screen lists it as MeshCore straight away. It briefly showed a Meshtastic badge until the scan found the radio, and tapping it in that moment tried a Meshtastic connection.
 - While the Devices screen is still searching, it says it is looking for Meshtastic and MeshCore radios when MeshCore support is on, instead of Meshtastic devices only.

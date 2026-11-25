@@ -10806,6 +10806,7 @@
   "paymentChooserStripeLabel": "Mit Stripe bezahlen",
   "paymentChooserStripeSubtitle": "Karte oder Apple Pay über Stripe",
   "paymentChooserTitle": "Zahlungsmethode wählen",
+  "paymentChooserAlreadyOwned": "Sie besitzen {productName} bereits.",
   "restorePurchasesSignInForExternal": "Keine App-Store-Käufe gefunden. Anmelden, um auch Stripe- und Buy-Me-a-Coffee-Pakete wiederherzustellen.",
   "scannerUnsupportedBleDescription": "Dieser Build läuft auf einer Plattform ohne Bluetooth-Funkmodul. Stattdessen ein SocialMesh-kompatibles Gerät über das Netzwerk verbinden.",
   "scannerUnsupportedBleTitle": "BLE nicht verfügbar",

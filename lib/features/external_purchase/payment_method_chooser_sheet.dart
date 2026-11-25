@@ -60,6 +60,23 @@ Future<void> showPaymentMethodChooserSheet({
     'stripeEnabled=${AppFeatureFlags.isStripePurchasesEnabled}',
   );
 
+  // Never start a purchase for something the user already owns. The
+  // chooser offers the store and Stripe side by side, so without this a
+  // pack bought on one rail could be bought again on the other.
+  // purchaseStateProvider merges both rails and counts every pack the
+  // Complete Pack includes.
+  if (ref.read(purchaseStateProvider).hasPurchased(productId)) {
+    AppLogging.purchase(
+      '[PaymentChooser] productId=$productId already owned - '
+      'no purchase started',
+    );
+    showInfoSnackBar(
+      context,
+      context.l10n.paymentChooserAlreadyOwned(productName),
+    );
+    return;
+  }
+
   if (!AppFeatureFlags.isStripePurchasesEnabled) {
     // No external provider on - go direct to store IAP, matching the
     // pre-Chunk-C behavior.

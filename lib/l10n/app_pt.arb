@@ -26974,6 +26974,7 @@
   "aetherValidationVerified": "Voo verificado nos registros OpenSky",
   "albumRarityPageTitle": "Cartas {rarity}",
   "paymentChooserTitle": "Escolha o método de pagamento",
+  "paymentChooserAlreadyOwned": "Você já possui {productName}.",
   "paymentChooserStoreLabelApple": "Pagar via App Store",
   "paymentChooserStoreLabelGoogle": "Pagar via Google Play",
   "paymentChooserStoreLabelGeneric": "Pagar via loja de apps",

@@ -30061,6 +30061,15 @@
   "@paymentChooserTitle": {
     "description": "Heading of the bottom sheet that lets the user pick App Store / Play Store vs Stripe for a one-time pack purchase."
   },
+  "paymentChooserAlreadyOwned": "You already own {productName}.",
+  "@paymentChooserAlreadyOwned": {
+    "description": "Shown instead of the payment chooser when the user taps buy on a pack they already own, through either payment method or the Complete Pack. Nothing is charged.",
+    "placeholders": {
+      "productName": {
+        "type": "String"
+      }
+    }
+  },
   "paymentChooserStoreLabelApple": "Pay via App Store",
   "@paymentChooserStoreLabelApple": {
     "description": "Row label on iOS: routes the purchase through RevenueCat / App Store IAP."
