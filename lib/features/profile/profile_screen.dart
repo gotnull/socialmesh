@@ -2440,7 +2440,8 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet>
     } on DisplayNameTakenException catch (e) {
       safeShowSnackBar(e.toString(), backgroundColor: AppTheme.errorRed);
     } catch (e) {
-      AppErrorHandler.addBreadcrumb('Profile save failed: $e');
+      // The type only: the message can quote the profile text being saved.
+      AppErrorHandler.addBreadcrumb('Profile save failed: ${e.runtimeType}');
       safeShowSnackBar(
         'Failed to save profile: $e', // lint-allow: hardcoded-string
         backgroundColor: AppTheme.errorRed,

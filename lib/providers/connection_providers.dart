@@ -2516,7 +2516,7 @@ class DeviceConnectionNotifier extends Notifier<DeviceConnectionState2> {
     );
     AppErrorHandler.addBreadcrumb(
       'Pairing invalidated: reason=${reason.logValue}, ' // lint-allow: hardcoded-string
-      'appleCode=$appleCodeLabel, device=$savedDeviceId', // lint-allow: hardcoded-string
+      'appleCode=$appleCodeLabel', // lint-allow: hardcoded-string
     );
 
     _resetInvalidationTracking();

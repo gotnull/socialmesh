@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Usage analytics and crash reporting now stay off from the moment the app first starts until you choose to share them. On a fresh install they were briefly on before the app switched them off, and crashes recorded while crash reporting was off could be sent later if you turned it on. Those are now deleted instead.
+- Crash reports you choose to share no longer include your saved radio's Bluetooth identifier, profile text from a failed profile save, or email addresses, phone numbers and keys found in error messages and the steps leading up to a crash.
 - Buying a pack you already own no longer opens the payment options. The App Store or Google Play and Stripe were offered side by side even when the pack was already unlocked through the other one, or through the Complete Pack, so it could be paid for twice. The app now says you already own it and charges nothing.
 
 - Resend now works on a direct message that only a relay node acknowledged. Tapping it used to do nothing visible: the message went out again, but its bubble kept showing the relay's tick. It now shows the new attempt and its outcome. A message the recipient has already confirmed is never sent again.

@@ -173,13 +173,13 @@ class AppErrorHandler {
         'platform_error_category',
         errorCategory,
       );
-      // Preserve the first 256 chars of the raw error message (unsanitized)
-      // so we can read it in the Crashlytics dashboard. Error messages from
-      // Flutter/Dart framework classes do not contain PII.
-      final rawMessage = error.toString();
+      // The first 256 chars of the error message, readable in the
+      // Crashlytics dashboard. Sanitised like every other reported string:
+      // platform errors can quote plugin payloads, not only framework text.
+      final message = _sanitizeString(error.toString());
       FirebaseCrashlytics.instance.setCustomKey(
         'platform_error_message',
-        rawMessage.length > 256 ? rawMessage.substring(0, 256) : rawMessage,
+        message.length > 256 ? message.substring(0, 256) : message,
       );
     } catch (_) {
       // Crashlytics not initialized - continue to recordError below.
@@ -533,6 +533,9 @@ class AppErrorHandler {
   @visibleForTesting
   static void resetThrottleStateForTest() => _throttledReportLastAt.clear();
 
+  @visibleForTesting
+  static List<String> get breadcrumbsForTest => List.unmodifiable(_breadcrumbs);
+
   /// Report error to Crashlytics with context.
   static void _reportToCrashlytics(
     Object error,
@@ -643,8 +646,11 @@ class AppErrorHandler {
   /// Add a breadcrumb for debugging crash context.
   /// Breadcrumbs help understand what the user was doing before a crash.
   static void addBreadcrumb(String action) {
+    // Breadcrumbs reach Crashlytics verbatim, so they are sanitised here
+    // like every other reported string.
+    final sanitized = _sanitizeString(action);
     final timestamp = DateTime.now().toIso8601String().substring(11, 19);
-    _breadcrumbs.add('[$timestamp] $action');
+    _breadcrumbs.add('[$timestamp] $sanitized');
 
     // Keep only the most recent breadcrumbs
     while (_breadcrumbs.length > _maxBreadcrumbs) {
@@ -653,7 +659,7 @@ class AppErrorHandler {
 
     // Also set on Crashlytics for crash reports
     try {
-      FirebaseCrashlytics.instance.log(action);
+      FirebaseCrashlytics.instance.log(sanitized);
     } catch (_) {
       // Crashlytics not initialized - ignore
     }

@@ -838,4 +838,26 @@ void main() {
       );
     });
   });
+
+  group('Breadcrumbs', () {
+    test('are sanitised before they are kept or reported', () {
+      AppErrorHandler.addBreadcrumb(
+        'Sync failed for owner@example.com token=abcdefghijklmnopqrstuvwxyz',
+      );
+
+      final last = AppErrorHandler.breadcrumbsForTest.last;
+      expect(last, contains('[REDACTED_EMAIL]'));
+      expect(last, contains('[REDACTED_CREDENTIAL]'));
+      expect(last, isNot(contains('owner@example.com')));
+    });
+
+    test('keep diagnostic text', () {
+      AppErrorHandler.addBreadcrumb('Scanner: connect error (err=StateError)');
+
+      expect(
+        AppErrorHandler.breadcrumbsForTest.last,
+        endsWith('Scanner: connect error (err=StateError)'),
+      );
+    });
+  });
 }
