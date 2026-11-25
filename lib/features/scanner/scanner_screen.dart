@@ -160,16 +160,22 @@ ScannerSearchSubtitle scannerSearchSubtitle({
       : ScannerSearchSubtitle.looking;
 }
 
-/// The BLE service UUID a saved device is known to expose, derived from
-/// the saved id: MeshCore ids carry a `meshcore-` prefix, Meshtastic ids
-/// are the bare BLE remote id. The saved-device placeholder row must be
-/// seeded with this UUID so `detectProtocol()` resolves it the way a
-/// live advertisement would - name-based detection resolves renamed
-/// nodes to `unknown`, and unknown rows silently ignore taps, which
-/// must never happen to a device the user already paired with.
+/// Whether the saved device is a MeshCore radio. A MeshCore Bluetooth
+/// connection saves the bare BLE remote id and records the protocol
+/// alongside it; only MeshCore TCP ids carry a `meshcore-` prefix.
 @visibleForTesting
-String savedDeviceServiceUuid(String savedDeviceId) =>
-    savedDeviceId.startsWith('meshcore-')
+bool savedDeviceIsMeshCore(String savedDeviceId, String? savedProtocol) =>
+    savedProtocol == 'meshcore' || savedDeviceId.startsWith('meshcore-');
+
+/// The BLE service UUID a saved device is known to expose. The
+/// saved-device placeholder row must be seeded with this UUID so
+/// `detectProtocol()` resolves it the way a live advertisement would -
+/// name-based detection resolves renamed nodes to `unknown`, and unknown
+/// rows silently ignore taps, which must never happen to a device the
+/// user already paired with.
+@visibleForTesting
+String savedDeviceServiceUuid(String savedDeviceId, {String? savedProtocol}) =>
+    savedDeviceIsMeshCore(savedDeviceId, savedProtocol)
     ? MeshCoreBleUuids.serviceUuid
     : MeshtasticBleUuids.serviceUuid;
 
@@ -238,6 +244,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
   String? _savedDeviceId;
   String? _savedDeviceName;
   TransportType? _savedDeviceTransportType;
+  String? _savedDeviceProtocol;
 
   /// Subscription used to monitor background reconnect outcome when the
   /// Scanner defers to an active _performReconnect cycle.
@@ -644,7 +651,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     final settingsAsync = ref.read(settingsServiceProvider);
     final lastDeviceId = settingsAsync.asData?.value.lastDeviceId;
     final lastWasMeshCore =
-        lastDeviceId != null && lastDeviceId.startsWith('meshcore-');
+        lastDeviceId != null &&
+        savedDeviceIsMeshCore(
+          lastDeviceId,
+          settingsAsync.asData?.value.lastDeviceProtocol,
+        );
     AppLogging.connection(
       'SCANNER: _listenForDisconnectCompletion registering - '
       'initial meshtasticState=${initialMeshtastic.state}, '
@@ -966,6 +977,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       savedDeviceId: lastDeviceId,
       savedDeviceName: lastDeviceName,
       savedDeviceType: _transportTypeFromString(lastDeviceType),
+      savedDeviceProtocol: settingsService.lastDeviceProtocol,
     );
 
     if (lastDeviceId == null || lastDeviceType == null) {
@@ -1182,6 +1194,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
           savedDeviceType: _transportTypeFromString(
             settingsService.lastDeviceType,
           ),
+          savedDeviceProtocol: settingsService.lastDeviceProtocol,
         );
       } catch (e) {
         AppLogging.connection('SCANNER: Failed to load saved device info: $e');
@@ -1581,10 +1594,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
     String? savedDeviceId,
     String? savedDeviceName,
     TransportType? savedDeviceType,
+    String? savedDeviceProtocol,
   }) {
     _savedDeviceId = savedDeviceId;
     _savedDeviceName = savedDeviceName;
     _savedDeviceTransportType = savedDeviceType;
+    _savedDeviceProtocol = savedDeviceProtocol;
   }
 
   TransportType _transportTypeFromString(String? type) {
@@ -1801,7 +1816,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       id: _savedDeviceId!,
       name: name,
       type: type,
-      serviceUuids: [savedDeviceServiceUuid(_savedDeviceId!)],
+      serviceUuids: [
+        savedDeviceServiceUuid(
+          _savedDeviceId!,
+          savedProtocol: _savedDeviceProtocol,
+        ),
+      ],
     );
   }
 

@@ -23,6 +23,52 @@ void main() {
         MeshCoreBleUuids.serviceUuid,
       );
     });
+
+    // A MeshCore Bluetooth connection saves the bare remote id and records
+    // the protocol separately, so the id alone looks like Meshtastic.
+    test('bare BLE id saved as meshcore resolves to MeshCore', () {
+      expect(
+        savedDeviceServiceUuid(
+          'C171489D-5770-67F5-D705-4093F4774E9C',
+          savedProtocol: 'meshcore',
+        ),
+        MeshCoreBleUuids.serviceUuid,
+      );
+      expect(
+        savedDeviceServiceUuid(
+          'C171489D-5770-67F5-D705-4093F4774E9C',
+          savedProtocol: 'meshtastic',
+        ),
+        MeshtasticBleUuids.serviceUuid,
+      );
+    });
+
+    test('a MeshCore placeholder from a bare saved id detects as MeshCore', () {
+      final placeholder = DeviceInfo(
+        id: 'C171489D-5770-67F5-D705-4093F4774E9C',
+        name: 'MeshCore-WisMeshCore',
+        type: TransportType.ble,
+        serviceUuids: [
+          savedDeviceServiceUuid(
+            'C171489D-5770-67F5-D705-4093F4774E9C',
+            savedProtocol: 'meshcore',
+          ),
+        ],
+      );
+      expect(
+        placeholder.detectProtocol().protocolType,
+        MeshProtocolType.meshcore,
+      );
+    });
+  });
+
+  group('savedDeviceIsMeshCore', () {
+    test('saved protocol or a meshcore- prefix marks MeshCore', () {
+      expect(savedDeviceIsMeshCore('AA:BB:CC:DD:EE:FF', 'meshcore'), isTrue);
+      expect(savedDeviceIsMeshCore('meshcore-tcp:10.0.0.5:5000', null), isTrue);
+      expect(savedDeviceIsMeshCore('AA:BB:CC:DD:EE:FF', 'meshtastic'), isFalse);
+      expect(savedDeviceIsMeshCore('AA:BB:CC:DD:EE:FF', null), isFalse);
+    });
   });
 
   group('saved-device placeholder protocol detection', () {
