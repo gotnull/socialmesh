@@ -166,11 +166,37 @@ void main() {
 
     // The session binds to a different radio before the protocol has
     // started its connection, so it still holds the first radio's nodes.
+    container.read(nodesProvider.notifier).clearNodesInMemory();
     await RadioScope.instance.useNodeNum(other);
     await container.read(nodeStorageProvider.future);
     await Future<void>.delayed(_afterSave);
 
     expect(RadioScope.instance.currentKey, radioScopeKeyForNodeNum(other));
+    expect(container.read(nodesProvider), isEmpty);
     expect(await _storedInCurrentScope(), isEmpty);
+  });
+
+  test("after a disconnect, the previous radio's nodes still held by the "
+      "protocol do not appear in the next radio's node list", () async {
+    final (container, protocol) = await _boot();
+    const other = 0xabcd2006;
+
+    await RadioScope.instance.useNodeNum(_radio);
+    await container.read(nodeStorageProvider.future);
+    await _identify(protocol, _radio);
+    for (var i = 1; i <= 20; i++) {
+      await _nodeInfo(protocol, 0x20000 + i);
+    }
+    await Future<void>.delayed(_afterSave);
+
+    // A disconnect forgets the radio's node number but keeps its nodes
+    // until the next connection starts.
+    protocol.resetForReconnect();
+    container.read(nodesProvider.notifier).clearNodesInMemory();
+    await RadioScope.instance.useNodeNum(other);
+    await container.read(nodeStorageProvider.future);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    expect(container.read(nodesProvider), isEmpty);
   });
 }

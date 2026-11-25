@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The node list from your first connection to a radio is saved. Connecting to a radio the app had never seen showed its nodes but often saved only some of them, or none, so the list was nearly empty the next time you opened the app without the radio. A later connection saved it as normal.
+- Switching from one Bluetooth radio to another without closing the app no longer leaves some of the first radio's nodes in the second radio's node list. They were never saved, so closing and reopening the app showed the right list.
 - Filter chips, section headers and other counts outside a sentence now show a thousands separator too, such as All 20,004, in the same style as the rest of the app for your language. 1.84.0 added it only to counts inside text such as Nodes (20,004).
 
 ## [1.84.0] - 2026-11-25

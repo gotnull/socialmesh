@@ -262,6 +262,12 @@ void main() {
         );
         addTearDown(env.container.dispose);
 
+        // A radio sends its own node number before its node database.
+        await env.protocol.handleIncomingPacket(
+          pb.FromRadio(myInfo: pb.MyNodeInfo(myNodeNum: 0x9999))
+              .writeToBuffer(),
+        );
+
         // Inject NodeInfo for the device-reported favourite (isFavorite=true).
         await _injectNodeInfo(
           env.protocol,

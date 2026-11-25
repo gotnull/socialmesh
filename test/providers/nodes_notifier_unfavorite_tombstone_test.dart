@@ -260,6 +260,11 @@ void main() {
       final env = await _buildContainer(tombstones: {nodeNum});
       addTearDown(env.container.dispose);
 
+      // A radio sends its own node number before its node database.
+      await env.protocol.handleIncomingPacket(
+        pb.FromRadio(myInfo: pb.MyNodeInfo(myNodeNum: 0x9999)).writeToBuffer(),
+      );
+
       await _injectNodeInfo(
         env.protocol,
         nodeNum: nodeNum,

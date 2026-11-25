@@ -6569,7 +6569,21 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
 
     // Then merge with existing nodes from protocol service
     // Protocol nodes take precedence but preserve stored positions if new nodes don't have them
-    final protocolNodes = Map<int, MeshNode>.from(protocol.nodes);
+    //
+    // The protocol keeps the last radio's nodes after a disconnect and
+    // clears them only when its next connection starts, together with its
+    // node number. They are merged only while that number belongs to the
+    // radio the storage scope is bound to; a switch to another radio
+    // rebuilds this notifier before the new connection starts.
+    final protocolNodeNum = protocol.myNodeNum;
+    final boundKey = RadioScope.instance.connectedKey;
+    final protocolNodesAreThisRadios =
+        protocolNodeNum != null &&
+        (boundKey == null ||
+            boundKey == radioScopeKeyForNodeNum(protocolNodeNum));
+    final protocolNodes = protocolNodesAreThisRadios
+        ? Map<int, MeshNode>.from(protocol.nodes)
+        : <int, MeshNode>{};
 
     // NOTE: No replaceAllFavorites / favorites-cache sync here.
     // Following the iOS CoreData pattern, isFavorite lives directly on the
@@ -6706,14 +6720,9 @@ class NodesNotifier extends Notifier<Map<int, MeshNode>> {
     // identifies, closing the store while the node replay is still
     // arriving; saves aimed at the closed store are lost. The radio's
     // nodes are saved again here, into the store opened for its scope.
-    // The protocol clears its nodes with its node number at the start of
-    // each connection, so a matching number means every node is this
-    // radio's.
-    final protocolNodeNum = protocol.myNodeNum;
     if (_storage?.isOpen == true &&
-        protocolNodeNum != null &&
-        RadioScope.instance.connectedKey ==
-            radioScopeKeyForNodeNum(protocolNodeNum)) {
+        protocolNodesAreThisRadios &&
+        boundKey != null) {
       for (final nodeNum in protocolNodes.keys) {
         _scheduleSave(updatedState[nodeNum]!);
       }
