@@ -577,12 +577,12 @@ class _StatsSection extends ConsumerWidget {
         SizedBox(height: AppTheme.spacing4 * scale),
         _StatRow(
           label: context.l10n.nodedexEncountersStatLabel,
-          value: '${entry.encounterCount}',
+          value: context.formatCount(entry.encounterCount),
           scale: scale,
         ),
         _StatRow(
           label: context.l10n.nodedexMessagesStatLabel,
-          value: '${entry.messageCount}',
+          value: context.formatCount(entry.messageCount),
           scale: scale,
         ),
         _StatRow(
@@ -880,14 +880,14 @@ class _BottomSummary extends StatelessWidget {
       children: [
         _CompactStat(
           icon: Icons.map_outlined,
-          value: '${entry.regionCount}',
+          value: context.formatCount(entry.regionCount),
           label: context.l10n.nodedexRegionsCompactLabel,
           color: rarity.borderColor,
           scale: scale,
         ),
         _CompactStat(
           icon: Icons.people_outline,
-          value: '${entry.historicalCoSeenCount}',
+          value: context.formatCount(entry.historicalCoSeenCount),
           label: context.l10n.nodedexCoSeenCompactLabel,
           color: rarity.borderColor,
           scale: scale,

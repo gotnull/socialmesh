@@ -2521,7 +2521,7 @@ class _LibraryBrowserContentState extends State<_LibraryBrowserContent>
               children: [
                 Text(
                   hasSearch
-                      ? '${_results.length} result${_results.length == 1 ? '' : 's'}'
+                      ? '${context.formatCount(_results.length)} result${_results.length == 1 ? '' : 's'}'
                       : context.l10n.ringtoneLibraryPopularPicks,
                   style: TextStyle(
                     fontSize: 12,

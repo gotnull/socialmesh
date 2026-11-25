@@ -102,7 +102,7 @@ class MeshHealthIndicator extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
-                  '${snapshot.issueCount}',
+                  context.formatCount(snapshot.issueCount),
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 10,
@@ -193,7 +193,7 @@ class MeshIssueBadge extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppTheme.radius10),
       ),
       child: Text(
-        '${issues.length}',
+        context.formatCount(issues.length),
         style: const TextStyle(
           color: Colors.white,
           fontSize: 11,

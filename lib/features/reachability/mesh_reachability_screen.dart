@@ -333,7 +333,7 @@ class _SummaryChip extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              count.toString(),
+              context.formatCount(count),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,

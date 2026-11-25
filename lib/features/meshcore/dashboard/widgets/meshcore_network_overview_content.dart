@@ -64,7 +64,7 @@ class MeshCoreNetworkOverviewContent extends ConsumerWidget {
             child: _StatItem(
               icon: Icons.forum_outlined,
               iconColor: context.accentColor,
-              value: channelCount.toString(),
+              value: context.formatCount(channelCount),
               label: l10n.meshcoreWidgetChannels,
             ),
           ),

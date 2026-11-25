@@ -115,7 +115,7 @@ class MeshHealthContent extends ConsumerWidget {
               _HealthFactor(
                 icon: Icons.people,
                 label: context.l10n.dashboardHealthNodes,
-                status: '${nodes.length}',
+                status: context.formatCount(nodes.length),
                 isGood: nodes.length > 1,
               ),
               _HealthFactor(

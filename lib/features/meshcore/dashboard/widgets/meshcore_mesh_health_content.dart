@@ -138,7 +138,7 @@ class MeshCoreMeshHealthContent extends ConsumerWidget {
               _HealthFactor(
                 icon: Icons.forum_outlined,
                 label: l10n.meshcoreWidgetMeshHealthChannelsLabel,
-                status: '$channelCount',
+                status: context.formatCount(channelCount),
                 isGood: channelCount > 0,
               ),
             ],

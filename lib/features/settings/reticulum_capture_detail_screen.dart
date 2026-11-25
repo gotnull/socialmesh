@@ -259,7 +259,7 @@ class _DetailBody extends StatelessWidget {
                   ),
                   InfoTableRow(
                     label: context.l10n.reticulumDetailRecordCount,
-                    value: '${m.recordCount}',
+                    value: context.formatCount(m.recordCount),
                     icon: Icons.list_outlined,
                   ),
                   InfoTableRow(
@@ -274,7 +274,7 @@ class _DetailBody extends StatelessWidget {
                   ),
                   InfoTableRow(
                     label: context.l10n.reticulumDetailDistinctSources,
-                    value: '${m.distinctSources.length}',
+                    value: context.formatCount(m.distinctSources.length),
                     icon: Icons.account_tree_outlined,
                   ),
                   InfoTableRow(

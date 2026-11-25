@@ -617,7 +617,8 @@ class _FileTransfersScreenState extends ConsumerState<FileTransfersScreen>
       ),
       InfoTableRow(
         label: context.l10n.fileTransferInfoChunks,
-        value: '${transfer.completedChunks.length}/${transfer.chunkCount}',
+        value:
+            '${context.formatCount(transfer.completedChunks.length)}/${context.formatCount(transfer.chunkCount)}',
         icon: Icons.grid_view,
       ),
       InfoTableRow(

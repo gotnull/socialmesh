@@ -2846,7 +2846,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 children: [
                                   Text(
                                     context.l10n.mapNodeCount(
-                                      '${nodesWithPosition.length}${nodesWithPosition.length != allNodesWithPosition.length ? '/${allNodesWithPosition.length}' : ''}',
+                                      '${context.formatCount(nodesWithPosition.length)}${nodesWithPosition.length != allNodesWithPosition.length ? '/${context.formatCount(allNodesWithPosition.length)}' : ''}',
                                     ),
                                     style: TextStyle(
                                       fontSize: 13,
@@ -3547,7 +3547,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 child: Text(
                   count > 999
                       ? '${(count / 1000).toStringAsFixed(1)}k'
-                      : '$count',
+                      : context.formatCount(count),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -5987,7 +5987,7 @@ class _PanelTab extends StatelessWidget {
                   ),
                   const SizedBox(width: AppTheme.spacing4),
                   Text(
-                    '$count',
+                    context.formatCount(count),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,

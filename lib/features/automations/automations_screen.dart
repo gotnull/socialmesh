@@ -698,7 +698,7 @@ class AutomationsScreen extends ConsumerWidget {
               _buildStatItem(
                 context,
                 label: context.l10n.automationScreenStatTotal,
-                value: stats.total.toString(),
+                value: context.formatCount(stats.total),
                 icon: Icons.bolt,
               ),
               Container(width: 1, height: 40, color: context.border),

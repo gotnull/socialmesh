@@ -161,7 +161,7 @@ class _LegendItem extends StatelessWidget {
         ),
         const SizedBox(width: AppTheme.spacing4),
         Text(
-          '$label ($count)',
+          '$label (${context.formatCount(count)})',
           style: TextStyle(
             fontSize: 11,
             color: textColor,

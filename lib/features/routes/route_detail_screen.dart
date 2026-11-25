@@ -111,7 +111,7 @@ class _RouteStatsBarState extends ConsumerState<_RouteStatsBar>
                 child: _StatItem(
                   icon: Icons.location_on,
                   label: context.l10n.routeDetailPointsLabel,
-                  value: '${route.locations.length}',
+                  value: context.formatCount(route.locations.length),
                 ),
               ),
               IconButton(

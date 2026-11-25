@@ -262,7 +262,7 @@ class _NetworkConnectionSectionState
                         borderRadius: BorderRadius.circular(AppTheme.radius8),
                       ),
                       child: Text(
-                        '${endpoints.length}',
+                        context.formatCount(endpoints.length),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

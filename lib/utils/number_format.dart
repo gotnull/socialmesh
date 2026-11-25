@@ -4,12 +4,19 @@ import 'package:intl/intl.dart';
 
 /// Number formatting utilities.
 class NumberFormatUtils {
-  static final _thousandsFormatter = NumberFormat.decimalPattern('en_US');
+  static final Map<String, NumberFormat> _decimalByLocale = {};
 
   /// Format integer with thousands separators (e.g., 1107 → "1,107").
-  /// Returns the number as-is for small values (< 1000).
-  static String formatWithThousandsSeparators(int value) {
-    return _thousandsFormatter.format(value);
+  /// Returns the number as-is for small values (< 1000). [localeName]
+  /// picks the grouping (1.107 in `de`); widgets pass the app's locale
+  /// through `context.formatCount`.
+  static String formatWithThousandsSeparators(
+    int value, [
+    String localeName = 'en_US',
+  ]) {
+    final formatter = _decimalByLocale[localeName] ??=
+        NumberFormat.decimalPattern(localeName);
+    return formatter.format(value);
   }
 
   /// Format count with thousands separators and optional suffix.

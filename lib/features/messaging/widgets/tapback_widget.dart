@@ -185,7 +185,7 @@ class _GroupedTapbackChip extends StatelessWidget {
           Text(group.emoji, style: const TextStyle(fontSize: 16)),
           const SizedBox(width: AppTheme.spacing3),
           Text(
-            '$count',
+            context.formatCount(count),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

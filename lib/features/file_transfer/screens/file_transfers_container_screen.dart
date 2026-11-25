@@ -277,7 +277,7 @@ class _TabBadge extends StatelessWidget {
             const SizedBox(width: AppTheme.spacing4),
           ],
           Text(
-            count.toString(),
+            context.formatCount(count),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

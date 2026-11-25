@@ -574,7 +574,7 @@ class _ChannelTile extends ConsumerWidget {
                     child: Text(
                       unreadCount > 99
                           ? context.l10n.channelsUnreadOverflow
-                          : '$unreadCount',
+                          : context.formatCount(unreadCount),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -683,7 +683,7 @@ class _CompactChannelTile extends ConsumerWidget {
                 child: Text(
                   unreadCount > 99
                       ? context.l10n.channelsUnreadOverflow
-                      : '$unreadCount',
+                      : context.formatCount(unreadCount),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,

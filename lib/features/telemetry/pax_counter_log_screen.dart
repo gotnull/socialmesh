@@ -275,7 +275,7 @@ class _DeviceCountTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$count',
+                context.formatCount(count),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,

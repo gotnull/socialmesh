@@ -83,7 +83,7 @@ class TakBridgeStatusCard extends ConsumerWidget {
                 Expanded(
                   child: _StatItem(
                     label: l10n.takBridgeClientsTitle,
-                    value: '${status.connectedClientCount}',
+                    value: context.formatCount(status.connectedClientCount),
                     icon: Icons.devices,
                   ),
                 ),

@@ -131,7 +131,7 @@ class _MrrpHarnessHomeScreenState extends ConsumerState<MrrpHarnessHomeScreen> {
                     _StatusRow(
                       icon: Icons.extension,
                       label: l10n.mrrpHarnessMrrpServices,
-                      value: '$serviceCount',
+                      value: context.formatCount(serviceCount),
                     ),
                     const SizedBox(height: AppTheme.spacing8),
                     // Budget gauge

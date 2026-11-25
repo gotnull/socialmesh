@@ -94,7 +94,7 @@ class ReticulumActivityDetail extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '${source.fragmentCount}',
+                  context.formatCount(source.fragmentCount),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,

@@ -181,7 +181,7 @@ class _LinkedDevicesScreenState extends ConsumerState<LinkedDevicesScreen>
                             ),
                           ),
                           child: Text(
-                            linkedNodeIds.length.toString(),
+                            context.formatCount(linkedNodeIds.length),
                             style: TextStyle(
                               color: context.accentColor,
                               fontSize: 12,

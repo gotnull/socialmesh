@@ -824,7 +824,7 @@ class _CompactContactTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
-                  '${contact.unreadCount}',
+                  context.formatCount(contact.unreadCount),
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -941,7 +941,7 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          '${contact.unreadCount}',
+                          context.formatCount(contact.unreadCount),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

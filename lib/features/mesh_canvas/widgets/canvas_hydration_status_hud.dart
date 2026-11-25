@@ -106,7 +106,7 @@ class _HydrationPill extends StatelessWidget {
     // we're in a recovery state. quiet/idle never show progress
     // (they don't have any). Spec §11.5.
     final label = (bandProgress != null && isAccent)
-        ? '$baseLabel ${bandProgress!.received}/${bandProgress!.total}'
+        ? '$baseLabel ${context.formatCount(bandProgress!.received)}/${context.formatCount(bandProgress!.total)}'
         : baseLabel;
     final iconData = switch (state) {
       MeshCanvasHydrationState.idle => Icons.brush_outlined,

@@ -462,7 +462,7 @@ class _SubscriptionStats extends StatelessWidget {
           children: [
             Expanded(
               child: _StatColumn(
-                value: total.toString(),
+                value: context.formatCount(total),
                 label: context.l10n.globalLayerStatsTopics,
                 icon: Icons.tag,
                 color: context.accentColor,
@@ -762,7 +762,7 @@ class _TopicMetricsRow extends StatelessWidget {
         if (metrics != null) ...[
           _MetricChip(
             icon: Icons.chat_bubble_outline,
-            value: '${metrics!.messageCount}',
+            value: context.formatCount(metrics!.messageCount),
             color: context.accentColor,
           ),
           const SizedBox(width: AppTheme.spacing8),

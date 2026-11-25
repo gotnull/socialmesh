@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n_extension.dart';
+
 /// Presentation model for a single item in an [AnimatedAvatarStack].
 ///
 /// This is a pure view model - it contains only the data the widget
@@ -533,7 +535,9 @@ class AnimatedAvatarStackState extends State<AnimatedAvatarStack>
       }
 
       overflowCircle = Semantics(
-        label: widget.overflowSemanticLabel ?? '+$overflowCount more',
+        label:
+            widget.overflowSemanticLabel ??
+            '+${context.formatCount(overflowCount)} more',
         child: overflowCircle,
       );
 
@@ -589,7 +593,7 @@ class _OverflowCircle extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        '+$overflowCount',
+        '+${context.formatCount(overflowCount)}',
         style: TextStyle(
           color: textColor,
           fontSize: fontSize,

@@ -216,7 +216,7 @@ class _RangeTestSessionScreenState extends ConsumerState<RangeTestSessionScreen>
       InfoTableRow(
         label: l10n.rangeTestReceived,
         value: expected == null || expected == 0
-            ? '${readings.length}'
+            ? context.formatCount(readings.length)
             : l10n.rangeTestReceivedValue(
                 summary.sequencedCount,
                 expected,

@@ -117,7 +117,8 @@ class MeshCoreSignalStrengthContent extends ConsumerWidget {
               _SignalStat(
                 icon: Icons.bolt_rounded,
                 label: l10n.meshcoreWidgetSignalStrongLabel,
-                value: '$strongCount/${contactsWithSnr.length}',
+                value:
+                    '${context.formatCount(strongCount)}/${context.formatCount(contactsWithSnr.length)}',
                 color: AccentColors.green,
               ),
               _SignalStat(
@@ -129,7 +130,7 @@ class MeshCoreSignalStrengthContent extends ConsumerWidget {
               _SignalStat(
                 icon: Icons.warning_amber_rounded,
                 label: l10n.meshcoreWidgetSignalWeakLabel,
-                value: '$weakCount',
+                value: context.formatCount(weakCount),
                 color: weakCount > 0
                     ? AppTheme.warningYellow
                     : context.textTertiary,

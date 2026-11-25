@@ -531,8 +531,8 @@ class _BottomInfoOverlay extends ConsumerWidget {
                   _InfoBadge(
                     icon: Icons.grid_view,
                     label: context.l10n.fileTransferGalleryChunksBadge(
-                      transfer.completedChunks.length.toString(),
-                      transfer.chunkCount.toString(),
+                      context.formatCount(transfer.completedChunks.length),
+                      context.formatCount(transfer.chunkCount),
                     ),
                     color: AccentColors.green,
                   ),

@@ -38,7 +38,6 @@ import '../../providers/node_favorites_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/connectivity_providers.dart';
 import '../../providers/world_mesh_map_provider.dart';
-import '../../utils/number_format.dart';
 import '../../utils/snackbar.dart';
 import 'favorites_screen.dart';
 import 'widgets/node_intelligence_panel.dart';
@@ -576,7 +575,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                     minHeight: 16,
                   ),
                   child: Text(
-                    '$activeCount',
+                    context.formatCount(activeCount),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -922,7 +921,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
                         child: Text(
                           count > 999
                               ? '${(count / 1000).toStringAsFixed(1)}k'
-                              : '$count',
+                              : context.formatCount(count),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -1328,8 +1327,7 @@ class _WorldMeshScreenState extends ConsumerState<WorldMeshScreen>
             AnimatedCounter(
               value: value,
               duration: const Duration(milliseconds: 600),
-              formatter: (v) =>
-                  NumberFormatUtils.formatWithThousandsSeparators(v),
+              formatter: context.formatCount,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w800,

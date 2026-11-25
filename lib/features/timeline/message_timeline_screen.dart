@@ -541,7 +541,7 @@ class _MessageEventCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppTheme.radius8),
                     ),
                     child: Text(
-                      '$msgCount',
+                      context.formatCount(msgCount),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,

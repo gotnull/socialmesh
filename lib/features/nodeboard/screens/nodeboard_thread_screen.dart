@@ -162,7 +162,8 @@ class _NodeBoardThreadScreenState extends ConsumerState<NodeBoardThreadScreen>
                           index: 1,
                           child: NodeBoardCardContainer(
                             // lint-allow: hardcoded-string
-                            title: 'Replies (${replies.length})',
+                            title:
+                                'Replies (${context.formatCount(replies.length)})',
                             icon: Icons.mode_comment_outlined,
                             child: replies.isEmpty
                                 ? _EmptyRepliesBlock()

@@ -547,7 +547,7 @@ class _VisualFlowEditorScreenState extends ConsumerState<VisualFlowEditorScreen>
                 child: IconButton(
                   icon: Badge(
                     label: Text(
-                      '$_errorCount',
+                      context.formatCount(_errorCount),
                       style: const TextStyle(fontSize: 10),
                     ),
                     backgroundColor: AppTheme.errorRed,

@@ -255,7 +255,7 @@ class _OverviewSection extends StatelessWidget {
               ),
               InfoTableRow(
                 label: context.l10n.reticulumDiagDistinctSources,
-                value: '${stats.distinctSourceCount}',
+                value: context.formatCount(stats.distinctSourceCount),
                 icon: Icons.account_tree_outlined,
               ),
               InfoTableRow(

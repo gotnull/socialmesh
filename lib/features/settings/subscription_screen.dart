@@ -1469,7 +1469,7 @@ class _GroupLicensingSection extends ConsumerWidget {
             subtitle: orgCount == 1
                 ? l10n.licenseOrgOverviewManageTileSubtitleOne
                 : l10n.licenseOrgOverviewManageTileSubtitleMany(
-                    orgCount.toString(),
+                    context.formatCount(orgCount),
                   ),
             onTap: () =>
                 Navigator.of(context).push(LicenseOrgOverviewScreen.route()),

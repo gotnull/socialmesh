@@ -197,7 +197,7 @@ class _DrawerHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppTheme.radius10),
             ),
             child: Text(
-              '$itemCount',
+              context.formatCount(itemCount),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,

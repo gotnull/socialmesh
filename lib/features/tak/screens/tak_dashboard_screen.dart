@@ -178,7 +178,7 @@ class _ForceCountCell extends ConsumerWidget {
         child: Column(
           children: [
             Text(
-              '$count',
+              context.formatCount(count),
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -389,7 +389,7 @@ class _StatusSummaryCard extends StatelessWidget {
             icon: Icons.people_outline,
             iconColor: context.textTertiary,
             label: context.l10n.takDashboardTotalEntities,
-            value: '${dashboard.totalCount}',
+            value: context.formatCount(dashboard.totalCount),
           ),
           const SizedBox(height: AppTheme.spacing8),
           // Tracked entities
@@ -397,7 +397,7 @@ class _StatusSummaryCard extends StatelessWidget {
             icon: Icons.visibility,
             iconColor: context.textTertiary,
             label: context.l10n.takDashboardTracked,
-            value: '${dashboard.trackedCount}',
+            value: context.formatCount(dashboard.trackedCount),
             subtitle: dashboard.trackedCallsigns.isNotEmpty
                 ? dashboard.trackedCallsigns.join(', ')
                 : null,
@@ -412,7 +412,7 @@ class _StatusSummaryCard extends StatelessWidget {
                 ? AccentColors.orange
                 : AppTheme.successGreen,
             label: context.l10n.takDashboardStaleEntities,
-            value: '${dashboard.staleCount}',
+            value: context.formatCount(dashboard.staleCount),
           ),
           const SizedBox(height: AppTheme.spacing8),
           // Position publishing

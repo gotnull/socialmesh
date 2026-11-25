@@ -412,7 +412,7 @@ class MrrpBudgetPanelScreen extends ConsumerWidget {
                   ),
                   _CounterRow(
                     label: 'count', // lint-allow: hardcoded-string
-                    value: '${stats.count}',
+                    value: context.formatCount(stats.count),
                   ),
                 ],
               ),

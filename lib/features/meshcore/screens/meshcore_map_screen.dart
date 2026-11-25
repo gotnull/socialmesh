@@ -1039,7 +1039,7 @@ class _MeshCoreMapScreenState extends ConsumerState<MeshCoreMapScreen>
                 child: Text(
                   count > 999
                       ? '${(count / 1000).toStringAsFixed(1)}k'
-                      : '$count',
+                      : context.formatCount(count),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

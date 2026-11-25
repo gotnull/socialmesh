@@ -1405,7 +1405,7 @@ class _PositionMapViewState extends State<_PositionMapView> {
                       children: [
                         _StatItem(
                           label: context.l10n.telemetryPositionStatPoints,
-                          value: '${logs.length}',
+                          value: context.formatCount(logs.length),
                           icon: Icons.location_on,
                         ),
                         _StatItem(
@@ -1719,7 +1719,7 @@ class _PositionNodeListPanel extends StatelessWidget {
                                         ),
                                       ),
                                       child: Text(
-                                        '$count',
+                                        context.formatCount(count),
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w600,

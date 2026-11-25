@@ -595,7 +595,7 @@ class _ParticleChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radius8),
       ),
       child: Text(
-        '$label: $count',
+        '$label: ${context.formatCount(count)}',
         style: TextStyle(
           fontSize: 12,
           color: Colors.white.withValues(alpha: 0.7),

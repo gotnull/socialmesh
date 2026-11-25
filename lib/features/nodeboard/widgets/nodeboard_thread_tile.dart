@@ -86,7 +86,7 @@ class NodeBoardThreadTile extends StatelessWidget {
                         ),
                         Text(
                           // lint-allow: hardcoded-string
-                          '· ${thread.replyCount}',
+                          '· ${context.formatCount(thread.replyCount)}',
                           style: TextStyle(
                             fontSize: 12,
                             color: context.textTertiary,

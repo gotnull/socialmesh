@@ -134,7 +134,7 @@ class _MdnsDiscoverySectionState extends ConsumerState<MdnsDiscoverySection>
                     borderRadius: BorderRadius.circular(AppTheme.radius8),
                   ),
                   child: Text(
-                    '${devices.length}',
+                    context.formatCount(devices.length),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

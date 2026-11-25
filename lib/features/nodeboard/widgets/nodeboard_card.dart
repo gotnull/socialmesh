@@ -13,6 +13,7 @@ import '../../../core/theme.dart';
 import '../models/nodeboard_enums.dart';
 import '../models/nodeboard_summary.dart';
 import 'nodeboard_card_container.dart';
+import '../../../core/l10n/l10n_extension.dart';
 
 class NodeBoardCard extends StatelessWidget {
   const NodeBoardCard({super.key, required this.summary, required this.onTap});
@@ -122,12 +123,14 @@ class NodeBoardCard extends StatelessWidget {
                     NodeBoardStatChip(
                       icon: Icons.forum_outlined,
                       // lint-allow: hardcoded-string
-                      label: '${summary.stats.threadCount} threads',
+                      label:
+                          '${context.formatCount(summary.stats.threadCount)} threads',
                     ),
                     NodeBoardStatChip(
                       icon: Icons.mode_comment_outlined,
                       // lint-allow: hardcoded-string
-                      label: '${summary.stats.replyCount} replies',
+                      label:
+                          '${context.formatCount(summary.stats.replyCount)} replies',
                     ),
                     _VisibilityBadge(visibility: summary.visibility),
                     if (summary.lastActivityAt != null)

@@ -371,7 +371,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
                         borderRadius: BorderRadius.circular(AppTheme.radius12),
                       ),
                       child: Text(
-                        '$activeCount',
+                        context.formatCount(activeCount),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -493,7 +493,7 @@ class _WorldMeshFilterSheetState extends ConsumerState<WorldMeshFilterSheet> {
               ),
             ),
             Text(
-              count.toString(),
+              context.formatCount(count),
               style: TextStyle(color: context.textTertiary, fontSize: 13),
             ),
             SizedBox(width: AppTheme.spacing8),

@@ -2154,7 +2154,7 @@ class _BlockedPeersSection extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius8),
                 ),
                 child: Text(
-                  '${blockedPeerNodeIds.length}',
+                  context.formatCount(blockedPeerNodeIds.length),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

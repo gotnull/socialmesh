@@ -229,7 +229,7 @@ class _ObjectiveRow extends StatelessWidget {
               ),
               const SizedBox(width: AppTheme.spacing8),
               Text(
-                '$count / ${objective.target}',
+                '${context.formatCount(count)} / ${context.formatCount(objective.target)}',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,

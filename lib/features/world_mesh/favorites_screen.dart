@@ -233,7 +233,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                       borderRadius: BorderRadius.circular(AppTheme.radius12),
                     ),
                     child: Text(
-                      '${favorites.length}',
+                      context.formatCount(favorites.length),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

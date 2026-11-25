@@ -1188,7 +1188,7 @@ class _AetherFlightCard extends ConsumerWidget {
                     ),
                     const SizedBox(width: AppTheme.spacing4),
                     Text(
-                      '${flight.receptionCount} reception${flight.receptionCount != 1 ? 's' : ''}',
+                      '${context.formatCount(flight.receptionCount)} reception${flight.receptionCount != 1 ? 's' : ''}',
                       style: TextStyle(
                         color: context.accentColor,
                         fontSize: 13,

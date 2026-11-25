@@ -118,7 +118,7 @@ class MeshCoreNodeMapContent extends ConsumerWidget {
                         ),
                         const SizedBox(width: AppTheme.spacing6),
                         Text(
-                          '${positioned.length}',
+                          context.formatCount(positioned.length),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

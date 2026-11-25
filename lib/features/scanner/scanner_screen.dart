@@ -3055,7 +3055,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
                             ),
                           ),
                           child: Text(
-                            '${filteredDevices.length}',
+                            context.formatCount(filteredDevices.length),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,

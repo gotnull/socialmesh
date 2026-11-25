@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme.dart';
+import '../l10n/l10n_extension.dart';
 
 /// A filter chip with a colored status dot (or icon), label, and optional
 /// count badge.
@@ -106,7 +107,7 @@ class StatusFilterChip extends StatelessWidget {
             if (count != null) ...[
               const SizedBox(width: AppTheme.spacing5),
               Text(
-                '${count!}',
+                context.formatCount(count!),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,

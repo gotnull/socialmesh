@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shake to report a bug samples the phone's motion sensor about 15 times a second instead of 50 while the app is open, so it uses less battery. A firm shake still opens the report.
 - A first connect to a radio or MQTT feed with thousands of nodes fills the node list about five times faster: a 20,000-node radio now takes about 3 seconds instead of about 15. Nodes arriving in a burst are added a few times a second rather than one at a time, and a single new node still appears straight away.
 
+### Fixed
+
+- Filter chips, section headers and other counts outside a sentence now show a thousands separator too, such as All 20,004, in the same style as the rest of the app for your language. 1.84.0 added it only to counts inside text such as Nodes (20,004).
+
 ## [1.84.0] - 2026-11-25
 
 ### Added

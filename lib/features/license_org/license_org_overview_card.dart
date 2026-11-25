@@ -220,7 +220,7 @@ class LicenseOrgOverviewCard extends ConsumerWidget {
             else
               InfoTableRow(
                 label: l10n.licenseOrgOverviewSeatsLabel,
-                value: seatCount.toString(),
+                value: context.formatCount(seatCount),
                 icon: Icons.event_seat_outlined,
               ),
             // Audit / temporal.

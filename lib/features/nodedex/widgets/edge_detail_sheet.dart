@@ -449,7 +449,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                 child: _StatCell(
                   icon: Icons.visibility_outlined,
                   label: context.l10n.nodedexStatCoSeen,
-                  value: '${relationship.count}x',
+                  value: '${context.formatCount(relationship.count)}x',
                   color: accent,
                 ),
               ),
@@ -458,7 +458,7 @@ class EdgeDetailSheet extends ConsumerWidget {
                 child: _StatCell(
                   icon: Icons.chat_bubble_outline,
                   label: context.l10n.nodedexStatMessages,
-                  value: '${relationship.messageCount}',
+                  value: context.formatCount(relationship.messageCount),
                   color: accent,
                 ),
               ),
@@ -696,7 +696,7 @@ class EdgeDetailSheet extends ConsumerWidget {
     final ageInDays = relationship.relationshipAge.inDays;
     final messagesPerDay = ageInDays > 0
         ? (relationship.messageCount / ageInDays).toStringAsFixed(1)
-        : '${relationship.messageCount}';
+        : context.formatCount(relationship.messageCount);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacing14),

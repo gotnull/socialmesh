@@ -816,7 +816,7 @@ class _HealthMetricsCard extends StatelessWidget {
                   child: _MetricTile(
                     icon: Icons.sync,
                     label: context.l10n.globalLayerReconnectsLabel,
-                    value: '${metrics.reconnectCount}',
+                    value: context.formatCount(metrics.reconnectCount),
                   ),
                 ),
               ],

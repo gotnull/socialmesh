@@ -342,7 +342,9 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
       ),
     );
     buffer.writeln(
-      context.l10n.nodeAnalyticsShareDetailGateways('${node.seenBy.length}'),
+      context.l10n.nodeAnalyticsShareDetailGateways(
+        context.formatCount(node.seenBy.length),
+      ),
     );
 
     shareText(
@@ -489,8 +491,8 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
           entry.voltage?.toStringAsFixed(2) ?? '',
           entry.channelUtil?.toStringAsFixed(2) ?? '',
           entry.airUtilTx?.toStringAsFixed(2) ?? '',
-          entry.neighborCount.toString(),
-          entry.gatewayCount.toString(),
+          context.formatCount(entry.neighborCount),
+          context.formatCount(entry.gatewayCount),
           entry.latitude?.toStringAsFixed(6) ?? '',
           entry.longitude?.toStringAsFixed(6) ?? '',
         ].join(','),
@@ -1139,7 +1141,7 @@ class _NodeAnalyticsScreenState extends State<NodeAnalyticsScreen> {
                     Expanded(
                       child: _buildStatItem(
                         context.l10n.nodeAnalyticsRecords,
-                        '${_history.length}',
+                        context.formatCount(_history.length),
                         Icons.data_array,
                       ),
                     ),

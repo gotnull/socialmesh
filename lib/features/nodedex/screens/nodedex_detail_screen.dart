@@ -800,7 +800,9 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                                     ),
                                     const SizedBox(width: AppTheme.spacing3),
                                     Text(
-                                      '${relationship.messageCount}',
+                                      context.formatCount(
+                                        relationship.messageCount,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 11,
                                         color: context.textTertiary,
@@ -833,7 +835,7 @@ class _NodeDexDetailScreenState extends ConsumerState<NodeDexDetailScreen>
                               ),
                               const SizedBox(width: AppTheme.spacing3),
                               Text(
-                                '${relationship.count}',
+                                context.formatCount(relationship.count),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -1596,7 +1598,7 @@ class _DiscoveryStatsCard extends ConsumerWidget {
           if (!isSelf)
             _InfoRow(
               label: context.l10n.nodedexEncountersLabel,
-              value: entry.encounterCount.toString(),
+              value: context.formatCount(entry.encounterCount),
               icon: Icons.repeat,
             ),
           if (entry.maxDistanceSeen != null)
@@ -1618,17 +1620,17 @@ class _DiscoveryStatsCard extends ConsumerWidget {
           if (!isSelf) _MessagesInfoRow(nodeNum: entry.nodeNum),
           _InfoRow(
             label: context.l10n.nodedexBroadcastRegionsLabel,
-            value: entry.regionCount.toString(),
+            value: context.formatCount(entry.regionCount),
             icon: Icons.public_outlined,
           ),
           _InfoRow(
             label: context.l10n.nodedexObservedFromRegionsLabel,
-            value: entry.observedFromRegionCount.toString(),
+            value: context.formatCount(entry.observedFromRegionCount),
             icon: Icons.my_location_outlined,
           ),
           _InfoRow(
             label: context.l10n.nodedexPositionsLabel,
-            value: entry.distinctPositionCount.toString(),
+            value: context.formatCount(entry.distinctPositionCount),
             icon: Icons.pin_drop_outlined,
           ),
           // Radio preset and frequency offset rows previously lived here.
@@ -2590,7 +2592,7 @@ class _SingleDaySummary extends StatelessWidget {
         children: [
           // Large count
           Text(
-            '$count',
+            context.formatCount(count),
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w700,
@@ -3161,7 +3163,9 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                     ),
                                     const SizedBox(width: AppTheme.spacing3),
                                     Text(
-                                      '${relationship.messageCount}',
+                                      context.formatCount(
+                                        relationship.messageCount,
+                                      ),
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: context.textTertiary,
@@ -3198,7 +3202,7 @@ class _CoSeenNodesBodyState extends ConsumerState<_CoSeenNodesBody> {
                                 ),
                                 const SizedBox(width: AppTheme.spacing3),
                                 Text(
-                                  '${relationship.count}',
+                                  context.formatCount(relationship.count),
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -3861,7 +3865,7 @@ class _MessagesInfoRow extends ConsumerWidget {
     }
     return _InfoRow(
       label: context.l10n.nodedexMessagesLabel,
-      value: count.toString(),
+      value: context.formatCount(count),
       icon: Icons.chat_bubble_outline,
     );
   }

@@ -742,7 +742,7 @@ class _RarityLegendItem extends StatelessWidget {
         ),
         const SizedBox(width: AppTheme.spacing3),
         Text(
-          '$count',
+          context.formatCount(count),
           style: TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.w600,
@@ -816,7 +816,7 @@ class _TraitCompletionRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Tooltip(
                 message:
-                    '${trait.displayLabel(context.l10n)}${discovered ? ' ($count)' : ''}',
+                    '${trait.displayLabel(context.l10n)}${discovered ? ' (${context.formatCount(count)})' : ''}',
                 child: Column(
                   children: [
                     Container(

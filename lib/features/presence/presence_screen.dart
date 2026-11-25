@@ -502,7 +502,7 @@ class _PresenceScreenState extends ConsumerState<PresenceScreen> {
                   Icon(_statusIcon(status), color: color, size: 24),
                   const SizedBox(height: AppTheme.spacing8),
                   Text(
-                    count.toString(),
+                    context.formatCount(count),
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: color,
                       fontWeight: FontWeight.bold,
@@ -858,7 +858,7 @@ class _ActivityTimeline extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      count.toString(),
+                      context.formatCount(count),
                       style: Theme.of(context).textTheme.labelSmall
                           ?.copyWith(color: _getBucketColor(context, index)),
                       maxLines: 1,

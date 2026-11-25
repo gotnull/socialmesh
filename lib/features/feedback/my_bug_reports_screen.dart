@@ -604,7 +604,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                               ),
                             ),
                             child: Text(
-                              '${report.unreadCount}',
+                              context.formatCount(report.unreadCount),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
@@ -631,7 +631,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                           ),
                           const SizedBox(width: AppTheme.spacing4),
                           Text(
-                            '${report.responses.length}',
+                            context.formatCount(report.responses.length),
                             style: TextStyle(
                               fontSize: 12,
                               color: context.textTertiary,
@@ -885,7 +885,7 @@ class _BugReportCardState extends ConsumerState<_BugReportCard>
                         ValueListenableBuilder<TextEditingValue>(
                           valueListenable: _replyController,
                           builder: (context, value, _) => Text(
-                            '${value.text.length}/2000',
+                            '${context.formatCount(value.text.length)}/2000',
                             style: TextStyle(
                               fontSize: 11,
                               color: context.textTertiary,

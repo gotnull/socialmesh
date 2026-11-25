@@ -467,49 +467,49 @@ class _PacketsBody extends ConsumerWidget {
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsReceived,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.packetsReceived),
+          context.formatCount(latest.packetsReceived),
         ),
         icon: Icons.call_received_rounded,
       ),
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsSent,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.packetsSent),
+          context.formatCount(latest.packetsSent),
         ),
         icon: Icons.call_made_rounded,
       ),
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsSentFlood,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.sentFlood),
+          context.formatCount(latest.sentFlood),
         ),
         icon: Icons.broadcast_on_personal_rounded,
       ),
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsSentDirect,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.sentDirect),
+          context.formatCount(latest.sentDirect),
         ),
         icon: Icons.near_me_rounded,
       ),
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsRecvFlood,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.recvFlood),
+          context.formatCount(latest.recvFlood),
         ),
         icon: Icons.podcasts_rounded,
       ),
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsRecvDirect,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.recvDirect),
+          context.formatCount(latest.recvDirect),
         ),
         icon: Icons.cell_tower_rounded,
       ),
       InfoTableRow(
         label: l10n.meshcoreRadioStatsPacketsRecvErrors,
         value: l10n.meshcoreRadioStatsPacketsCount(
-          _formatCount(latest.recvErrors),
+          context.formatCount(latest.recvErrors),
         ),
         icon: Icons.warning_amber_rounded,
       ),
@@ -519,21 +519,5 @@ class _PacketsBody extends ConsumerWidget {
       opacity: snapshot.isStale ? 0.55 : 1.0,
       child: InfoTable(rows: rows),
     );
-  }
-
-  /// Format an integer with thousands separators (e.g. 1247 -> "1,247").
-  /// Uses a manual grouping so the result is locale-stable.
-  static String _formatCount(int n) {
-    if (n < 1000) return '$n';
-    final s = n.toString();
-    final buf = StringBuffer();
-    var firstGroup = s.length % 3;
-    if (firstGroup == 0) firstGroup = 3;
-    buf.write(s.substring(0, firstGroup));
-    for (var i = firstGroup; i < s.length; i += 3) {
-      buf.write(',');
-      buf.write(s.substring(i, i + 3));
-    }
-    return buf.toString();
   }
 }

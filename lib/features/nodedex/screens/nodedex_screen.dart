@@ -901,7 +901,7 @@ class _SocialTagFilterChip extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
-                  count.toString(),
+                  context.formatCount(count),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -975,7 +975,7 @@ class _TraitFilterChip extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
-                  count.toString(),
+                  context.formatCount(count),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -1251,7 +1251,7 @@ class _NodeDexListTile extends ConsumerWidget {
                         // Encounter count
                         MetricChip(
                           icon: Icons.repeat,
-                          value: entry.encounterCount.toString(),
+                          value: context.formatCount(entry.encounterCount),
                           tooltip: context.l10n.nodedexEncountersCount(
                             entry.encounterCount,
                           ),

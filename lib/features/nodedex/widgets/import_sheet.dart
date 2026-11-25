@@ -298,7 +298,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                 child: _SummaryCell(
                   icon: Icons.add_circle_outline,
                   label: context.l10n.nodedexImportSummaryNew,
-                  value: '${preview.newEntryCount}',
+                  value: context.formatCount(preview.newEntryCount),
                   color: AppTheme.successGreen,
                 ),
               ),
@@ -307,7 +307,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                 child: _SummaryCell(
                   icon: Icons.merge_outlined,
                   label: context.l10n.nodedexImportSummaryMerge,
-                  value: '${preview.mergeEntryCount}',
+                  value: context.formatCount(preview.mergeEntryCount),
                   color: AppTheme.primaryBlue,
                 ),
               ),
@@ -316,7 +316,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
                 child: _SummaryCell(
                   icon: Icons.warning_amber_outlined,
                   label: context.l10n.nodedexImportSummaryConflicts,
-                  value: '${preview.conflictCount}',
+                  value: context.formatCount(preview.conflictCount),
                   color: preview.hasConflicts
                       ? AppTheme.warningYellow
                       : context.textTertiary,
@@ -537,7 +537,7 @@ class _ImportPreviewSheetState extends ConsumerState<_ImportPreviewSheet>
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              '$unresolvedCount '
+              '${context.formatCount(unresolvedCount)} '
               '${unresolvedCount == 1 ? "conflict" : "conflicts"} '
               'unresolved - using "Keep Local" as default', // lint-allow: hardcoded-string
               style: TextStyle(

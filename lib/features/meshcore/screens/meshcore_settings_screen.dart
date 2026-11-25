@@ -453,12 +453,12 @@ class _MeshCoreSettingsScreenState extends ConsumerState<MeshCoreSettingsScreen>
       _batteryRow(batteryState),
       InfoTableRow(
         label: context.l10n.meshcoreContactsLabel,
-        value: '$contactCount',
+        value: context.formatCount(contactCount),
         icon: Icons.contacts_outlined,
       ),
       InfoTableRow(
         label: context.l10n.meshcoreChannelsLabel,
-        value: '$channelCount',
+        value: context.formatCount(channelCount),
         icon: Icons.tag,
       ),
     ];

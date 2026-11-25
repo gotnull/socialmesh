@@ -69,6 +69,18 @@ void main() {
       });
     });
 
+    test('groups by the given locale', () {
+      expect(
+        NumberFormatUtils.formatWithThousandsSeparators(20004, 'en'),
+        '20,004',
+      );
+      expect(
+        NumberFormatUtils.formatWithThousandsSeparators(20004, 'de'),
+        '20.004',
+      );
+      expect(NumberFormatUtils.formatWithThousandsSeparators(999, 'de'), '999');
+    });
+
     group('formatCount', () {
       test('formats count without suffix', () {
         expect(NumberFormatUtils.formatCount(1107), '1,107');

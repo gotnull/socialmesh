@@ -791,7 +791,7 @@ class _ContactTile extends StatelessWidget {
     final shortText = contact.shortName ?? safeTruncate(contact.displayName, 2);
 
     final subtitle = contact.hasTransfers
-        ? '${contact.transferCount} '
+        ? '${context.formatCount(contact.transferCount)} '
               'file${contact.transferCount == 1 ? '' : 's'} transferred'
         : presenceStatusText(contact.presence, contact.lastHeardAge);
 
@@ -866,7 +866,7 @@ class _ContactTile extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          '${contact.activeTransferCount}',
+                          context.formatCount(contact.activeTransferCount),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1165,14 +1165,14 @@ class _ContactDetailSheet extends StatelessWidget {
                 children: [
                   _InlineStat(
                     icon: Icons.arrow_upward,
-                    value: '${contact.sentCount}',
+                    value: context.formatCount(contact.sentCount),
                     label: context.l10n.fileTransferContactsDetailSent,
                     color: AppTheme.primaryBlue,
                   ),
                   _StatDivider(),
                   _InlineStat(
                     icon: Icons.arrow_downward,
-                    value: '${contact.receivedCount}',
+                    value: context.formatCount(contact.receivedCount),
                     label: context.l10n.fileTransferContactsDetailReceived,
                     color: AppTheme.primaryPurple,
                   ),
@@ -1274,7 +1274,7 @@ class _ContactDetailSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppTheme.radius4),
                     ),
                     child: Text(
-                      '${transfers.length}',
+                      context.formatCount(transfers.length),
                       style: TextStyle(
                         color: context.accentColor,
                         fontSize: 11,

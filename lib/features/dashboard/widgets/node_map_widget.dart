@@ -10,6 +10,7 @@ import '../../../core/theme.dart';
 import '../../../core/widgets/mesh_map_widget.dart';
 import '../../../providers/app_providers.dart';
 import '../../../providers/presence_providers.dart';
+import '../../../core/l10n/l10n_extension.dart';
 
 /// Dashboard widget showing nodes on a mini map
 class NodeMapContent extends ConsumerWidget {
@@ -126,7 +127,7 @@ class NodeMapContent extends ConsumerWidget {
                         ),
                         const SizedBox(width: AppTheme.spacing6),
                         Text(
-                          '${nodesWithPosition.length}',
+                          context.formatCount(nodesWithPosition.length),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

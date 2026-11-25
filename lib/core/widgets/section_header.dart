@@ -10,6 +10,7 @@ import '../theme.dart';
 import 'app_bottom_sheet.dart';
 import 'auto_scroll_text.dart';
 import 'edge_fade.dart';
+import '../l10n/l10n_extension.dart';
 
 /// Canonical sub-section title used above cards, tables, and form groups
 /// (the "CONNECTION DETAILS" / "QUICK ACTIONS" / "CURRENT VERSION" style).
@@ -170,7 +171,7 @@ class SectionHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
-                count.toString(),
+                context.formatCount(count!),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -265,7 +266,7 @@ class _BlurredSectionHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radius8),
               ),
               child: Text(
-                count.toString(),
+                context.formatCount(count!),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -416,7 +417,7 @@ class SectionFilterChip extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radius10),
                 ),
                 child: Text(
-                  count.toString(),
+                  context.formatCount(count!),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

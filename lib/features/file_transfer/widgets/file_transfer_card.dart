@@ -268,15 +268,15 @@ class FileTransferCard extends ConsumerWidget {
               _MetricChip(
                 icon: Icons.grid_view,
                 value: context.l10n.fileTransferCardChunksProgress(
-                  transfer.completedChunks.length.toString(),
-                  transfer.chunkCount.toString(),
+                  context.formatCount(transfer.completedChunks.length),
+                  context.formatCount(transfer.chunkCount),
                 ),
               )
             else
               _MetricChip(
                 icon: Icons.grid_view,
                 value: context.l10n.fileTransferCardChunksTotal(
-                  transfer.chunkCount.toString(),
+                  context.formatCount(transfer.chunkCount),
                 ),
               ),
             _MetricChip(
@@ -1164,7 +1164,7 @@ class FileAttachmentPreview extends StatelessWidget {
                 Text(
                   context.l10n.fileTransferAttachmentMeta(
                     fileSize,
-                    chunkCount.toString(),
+                    context.formatCount(chunkCount),
                   ),
                   style: TextStyle(color: context.textTertiary, fontSize: 11),
                 ),

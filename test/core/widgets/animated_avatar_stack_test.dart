@@ -4,14 +4,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/core/widgets/animated_avatar_stack.dart';
+import 'package:socialmesh/l10n/app_localizations.dart';
 
 /// Helper to wrap a widget in MaterialApp for testing.
 Widget _wrap(Widget child) {
-  return MaterialApp(home: Scaffold(body: child));
+  return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
 }
 
 Widget _wrapReducedMotion(Widget child) {
   return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     home: MediaQuery(
       data: const MediaQueryData(disableAnimations: true),
       child: Scaffold(body: child),

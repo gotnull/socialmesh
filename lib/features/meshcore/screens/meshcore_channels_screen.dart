@@ -149,7 +149,7 @@ class _MeshCoreChannelsScreenState extends ConsumerState<MeshCoreChannelsScreen>
         hasScrollBody: true,
         leading: const MeshCoreHamburgerMenuButton(),
         title:
-            '${context.l10n.meshcoreChannelsTitle}${allChannels.isEmpty ? '' : ' (${allChannels.length})'}',
+            '${context.l10n.meshcoreChannelsTitle}${allChannels.isEmpty ? '' : ' (${context.formatCount(allChannels.length)})'}',
         actions: [
           const MeshCoreDeviceStatusButton(),
           AppBarOverflowMenu<String>(
