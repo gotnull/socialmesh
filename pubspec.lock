@@ -21,10 +21,10 @@ packages:
     dependency: "direct main"
     description:
       name: align_positioned
-      sha256: "753a66dc7577def79e14b1d10d514097035c61a8d6f896601f3dfc3aa32b9977"
+      sha256: a93691debfad485d01636de0e0257b3ca187d5ded903bd5fa47ea2cd3a27e0db
       url: "https://pub.dev"
     source: hosted
-    version: "5.1.0"
+    version: "5.1.2"
   analyzer:
     dependency: transitive
     description:
@@ -1689,10 +1689,10 @@ packages:
     dependency: transitive
     description:
       name: matrix4_transform
-      sha256: "1346e53517e3081d3e8362377be97e285e2bd348855c177eae2a18aa965cafa0"
+      sha256: "80eab1725411134fdf227088b44583a8ad53317abef663ababd3a74e7fdf4a8f"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.1"
+    version: "4.1.0"
   meta:
     dependency: transitive
     description:
@@ -2486,10 +2486,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11"
+      sha256: "0a10344e901e5b2e63819567951cb6a06673ed6b84f40462188ff5a0c41f371f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.12"
+    version: "0.7.14"
   timeago:
     dependency: "direct main"
     description:
