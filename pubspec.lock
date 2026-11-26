@@ -1625,10 +1625,10 @@ packages:
     dependency: "direct main"
     description:
       name: live_activities
-      sha256: c9027276d87d0c04a24174495a7f235708e5b189ef5bd86a42004d85d3c5fb28
+      sha256: "5d7f59869ca9c6a46883af9d380a43285bf589f1e35249a042e23bdf21150150"
       url: "https://pub.dev"
     source: hosted
-    version: "2.6.0"
+    version: "2.6.1"
   logger:
     dependency: "direct main"
     description:
@@ -2486,10 +2486,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11"
+      sha256: "0a10344e901e5b2e63819567951cb6a06673ed6b84f40462188ff5a0c41f371f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.12"
+    version: "0.7.14"
   timeago:
     dependency: "direct main"
     description:
