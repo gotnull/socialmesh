@@ -1004,6 +1004,68 @@ void main() {
     });
   });
 
+  group('Link loss', () {
+    Future<
+      (
+        ConnectionCoordinator,
+        FakeMeshCoreBleTransport,
+        List<MeshConnectionState>,
+      )
+    >
+    connected() async {
+      final transport = FakeMeshCoreBleTransport();
+      final coordinator = ConnectionCoordinator(
+        meshCoreAdapterFactory: (t) => FakeMeshCoreAdapter(t),
+        meshCoreTransportFactory: () => transport,
+        scopeForDevice: (_) async {},
+        scopeForIdentity: (_, _) async {},
+      );
+      final states = <MeshConnectionState>[];
+      coordinator.stateStream.listen(states.add);
+      await coordinator.connect(
+        device: DeviceInfo(
+          id: 'meshcore-link-loss',
+          name: 'MeshCore Test',
+          type: TransportType.ble,
+        ),
+        advertisedServiceUuids: [MeshCoreBleUuids.serviceUuid],
+      );
+      await Future<void>.delayed(Duration.zero);
+      return (coordinator, transport, states);
+    }
+
+    test('a MeshCore link that drops by itself is announced as '
+        'disconnected', () async {
+      final (coordinator, transport, states) = await connected();
+      expect(coordinator.isConnected, isTrue);
+      states.clear();
+
+      // The radio goes out of range: the transport reports the drop.
+      await transport.disconnect();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(states, [MeshConnectionState.disconnected]);
+      expect(coordinator.isConnected, isFalse);
+      expect(coordinator.activeAdapter, isNull);
+      expect(coordinator.activeProtocol, isNull);
+      await coordinator.dispose();
+    });
+
+    test('an explicit disconnect is announced once', () async {
+      final (coordinator, _, states) = await connected();
+      states.clear();
+
+      await coordinator.disconnect();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        states.where((s) => s == MeshConnectionState.disconnected),
+        hasLength(1),
+      );
+      await coordinator.dispose();
+    });
+  });
+
   group('Cleanup correctness', () {
     test('MeshCore disconnect clears capture and state', () async {
       final coordinator = ConnectionCoordinator(

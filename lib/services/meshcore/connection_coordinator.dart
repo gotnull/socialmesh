@@ -191,6 +191,10 @@ class ConnectionCoordinator {
   /// MeshCore capture for debugging (debug builds only).
   MeshCoreFrameCapture? _meshCoreCapture;
 
+  /// Watches the connected MeshCore transport for a link that drops by
+  /// itself. Cancelled on disconnect and when the link is lost.
+  StreamSubscription<DeviceConnectionState>? _meshCoreLinkSubscription;
+
   /// Single-flight guard: non-null while connect() is running.
   Completer<ConnectionResult>? _connectInProgress;
 
@@ -580,6 +584,7 @@ class ConnectionCoordinator {
 
       _currentDeviceInfo = identifyResult.value;
       _stateController.add(MeshConnectionState.connected);
+      _watchMeshCoreLink(transport, attemptId);
 
       AppLogging.connection(
         'ConnectionCoordinator: MeshCore connected and identified',
@@ -721,6 +726,48 @@ class ConnectionCoordinator {
     }
   }
 
+  // A MeshCore link that drops by itself (radio out of range, powered off)
+  // is announced as disconnected, the same as an explicit disconnect: the
+  // lifecycle provider then reconnects, or arms the OS-level reconnect in
+  // the background, and the screens stop showing a dead link as connected.
+  // disconnect() bumps the attempt id before it tears the link down, so its
+  // own transport events are ignored here.
+  void _watchMeshCoreLink(MeshTransport transport, int attemptId) {
+    unawaited(_meshCoreLinkSubscription?.cancel());
+    _meshCoreLinkSubscription = transport.connectionStateStream.listen((state) {
+      if (state != DeviceConnectionState.disconnected &&
+          state != DeviceConnectionState.error) {
+        return;
+      }
+      if (_connectionAttemptId != attemptId) return;
+      unawaited(_handleMeshCoreLinkLost(attemptId, state));
+    });
+  }
+
+  Future<void> _handleMeshCoreLinkLost(
+    int attemptId,
+    DeviceConnectionState state,
+  ) async {
+    _connectionAttemptId++;
+    unawaited(_meshCoreLinkSubscription?.cancel());
+    _meshCoreLinkSubscription = null;
+    AppLogging.meshcore(
+      'event=link.lost state=${state.name} attempt=c$attemptId',
+    );
+    _meshCoreCapture?.stop();
+    _meshCoreCapture = null;
+    final adapter = _activeAdapter;
+    _activeAdapter = null;
+    _activeProtocol = null;
+    _currentDeviceInfo = null;
+    try {
+      await adapter?.dispose();
+    } catch (e) {
+      AppLogging.meshcore('event=link.lost.cleanup_failed error=$e');
+    }
+    _stateController.add(MeshConnectionState.disconnected);
+  }
+
   Future<void> _cleanupMeshCore(MeshTransport transport) async {
     await transport.dispose();
     _activeAdapter = null;
@@ -826,6 +873,8 @@ class ConnectionCoordinator {
     // in-flight connect(). This must happen FIRST, before any async work.
     // -------------------------------------------------------------------------
     _connectionAttemptId++;
+    unawaited(_meshCoreLinkSubscription?.cancel());
+    _meshCoreLinkSubscription = null;
     AppLogging.connection(
       'ConnectionCoordinator: Incremented attemptId to $_connectionAttemptId',
     );

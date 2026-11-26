@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- When a MeshCore radio drops out by itself, such as going out of range or switching off, the app now notices straight away: it shows MeshCore Disconnected and starts reconnecting, or sets up the background reconnect while the app is in the background. It used to keep showing the radio as connected and only reconnected the next time the app came to the front.
 - MeshCore screens such as Messages no longer stay on MeshCore Disconnected after the radio has connected. A connection that completed at the moment the app started tracking the radio's state could be missed, so the screen kept the old state while the device sheet showed the radio as connected.
 
 ## [1.85.0] - 2026-11-26
