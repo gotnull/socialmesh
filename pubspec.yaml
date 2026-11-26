@@ -89,7 +89,7 @@ dependencies:
   # done on the node itself.
   flutter_tts: ^4.2.3
   record: ^7.2.0
-  live_activities: ^2.5.1
+  live_activities: ^2.6.1
   package_info_plus: ^10.2.2
   device_info_plus: ^13.3.0
 
