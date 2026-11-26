@@ -18026,13 +18026,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get scannerConnectingStatus => 'Підключення...';
 
   @override
-  String scannerConnectionFailedWithError(String error) {
-    return 'Помилка підключення: $error';
-  }
-
-  @override
   String get scannerConnectionTimedOut =>
       'Час підключення вичерпано. Пристрій може бути поза зоною дії, вимкнено або підключено до іншого телефону.';
+
+  @override
+  String get scannerConnectionFailed =>
+      'Не вдалося підключитися до пристрою. Перевірте, чи його увімкнено і чи він у зоні досяжності, і спробуйте ще раз.';
 
   @override
   String get scannerCopyright =>
@@ -18113,14 +18112,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get scannerGattConnectionFailed =>
       'Помилка підключення. Це може статися, якщо пристрій раніше був зістикований з іншим додатком. Перейдіть до Налаштування > Bluetooth, знайдіть пристрій Meshtastic, натисніть \"Забути\", а потім спробуйте знову.';
-
-  @override
-  String get scannerMeshCoreConnectionFailed => 'Помилка підключення MeshCore';
-
-  @override
-  String scannerMeshCoreConnectionFailedWithError(String error) {
-    return 'Помилка підключення MeshCore: $error';
-  }
 
   @override
   String get scannerPairingInvalidatedError =>

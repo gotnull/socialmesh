@@ -17507,13 +17507,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get scannerConnectingStatus => 'Connessione...';
 
   @override
-  String scannerConnectionFailedWithError(String error) {
-    return 'Connessione fallita: $error';
-  }
-
-  @override
   String get scannerConnectionTimedOut =>
       'Timeout di connessione. Il dispositivo potrebbe essere fuori portata, spento o connesso a un altro telefono.';
+
+  @override
+  String get scannerConnectionFailed =>
+      'Impossibile connettersi al dispositivo. Controlla che sia acceso e nel raggio d\'azione, poi riprova.';
 
   @override
   String get scannerCopyright =>
@@ -17591,14 +17590,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get scannerGattConnectionFailed =>
       'Connessione fallita. Questo può accadere se il dispositivo era abbinato a un\'altra app. Vai su Impostazioni > Bluetooth, trova il dispositivo Meshtastic, tocca \"Dimentica\", poi riprova.';
-
-  @override
-  String get scannerMeshCoreConnectionFailed => 'Connessione MeshCore fallita';
-
-  @override
-  String scannerMeshCoreConnectionFailedWithError(String error) {
-    return 'Connessione MeshCore fallita: $error';
-  }
 
   @override
   String get scannerPairingInvalidatedError =>

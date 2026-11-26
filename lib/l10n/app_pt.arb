@@ -21471,15 +21471,6 @@
   "@scannerConnectingStatus": {
     "description": "Default status text shown on the connecting animation."
   },
-  "@scannerConnectionFailedWithError": {
-    "description": "Error message set when a BLE/MeshCore connection fails with an exception.",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The exception message."
-      }
-    }
-  },
   "@scannerConnectionTimedOut": {
     "description": "User-friendly error message for BLE connection timeout errors."
   },
@@ -21559,18 +21550,6 @@
   },
   "@scannerGattConnectionFailed": {
     "description": "User-friendly error message for GATT_ERROR 133 or discovery failed BLE errors."
-  },
-  "@scannerMeshCoreConnectionFailed": {
-    "description": "Fallback error message when MeshCore connection fails with no specific message."
-  },
-  "@scannerMeshCoreConnectionFailedWithError": {
-    "description": "Error snackbar message when MeshCore connection throws an exception.",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The exception message."
-      }
-    }
   },
   "@scannerPairingInvalidatedError": {
     "description": "Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault."
@@ -35235,8 +35214,8 @@
   "scannerBluetoothSettingsOpenFailed": "Não foi possível abrir as Configurações Bluetooth. Abra manualmente em Ajustes > Bluetooth.",
   "scannerConnectDeviceTitle": "Conectar Dispositivo",
   "scannerConnectingStatus": "Conectando...",
-  "scannerConnectionFailedWithError": "Falha na conexão: {error}",
   "scannerConnectionTimedOut": "Tempo de conexão esgotado. O dispositivo pode estar fora de alcance, desligado ou conectado a outro telefone.",
+  "scannerConnectionFailed": "Não foi possível conectar ao dispositivo. Verifique se está ligado e dentro do alcance e tente novamente.",
   "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nLicenciado sob a GPL-3.0-or-later.",
   "scannerDetailAddress": "Endereço",
   "scannerDetailBluetoothLowEnergy": "BLE",
@@ -35259,8 +35238,6 @@
   "scannerEnableLabel": "Ativar",
   "scannerFilteringByUuid": "Filtrando por UUID Meshtastic",
   "scannerGattConnectionFailed": "Falha na conexão. Isso pode acontecer se o dispositivo foi pareado anteriormente com outro app. Vá em Ajustes > Bluetooth, encontre o dispositivo Meshtastic, toque em \"Esquecer\" e tente novamente.",
-  "scannerMeshCoreConnectionFailed": "Falha na conexão MeshCore",
-  "scannerMeshCoreConnectionFailedWithError": "Falha na conexão MeshCore: {error}",
   "scannerPairingInvalidatedError": "O pareamento precisa ser atualizado - a identidade Bluetooth do rádio mudou. Esqueça o dispositivo nas Configurações de Bluetooth e pareie novamente.",
   "scannerPairingRefreshBody": "Isso pode acontecer após uma redefinição de fábrica ou redefinição de região/dispositivo. O rádio pode ter limpado sua identidade Bluetooth, então o pareamento salvo no seu telefone não corresponde mais a este dispositivo.\n\nRemova o pareamento antigo nas configurações de Bluetooth do telefone e, em seguida, pareie o dispositivo novamente.",
   "scannerPairingRefreshOpenBluetoothSettings": "Abrir Configurações de Bluetooth",

@@ -29518,17 +29518,17 @@ abstract class AppLocalizations {
   /// **'Connecting...'**
   String get scannerConnectingStatus;
 
-  /// Error message set when a BLE/MeshCore connection fails with an exception.
-  ///
-  /// In en, this message translates to:
-  /// **'Connection failed: {error}'**
-  String scannerConnectionFailedWithError(String error);
-
   /// User-friendly error message for BLE connection timeout errors.
   ///
   /// In en, this message translates to:
   /// **'Connection timed out. The device may be out of range, powered off, or connected to another phone.'**
   String get scannerConnectionTimedOut;
+
+  /// Error shown when connecting to a radio fails for a reason without a more specific message.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect to the device. Check it is on and within range, then try again.'**
+  String get scannerConnectionFailed;
 
   /// Copyright notice at the bottom of the scanner screen.
   ///
@@ -29655,18 +29655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection failed. This can happen if the device was previously paired with another app. Go to Settings > Bluetooth, find the Meshtastic device, tap \"Forget\", then try again.'**
   String get scannerGattConnectionFailed;
-
-  /// Fallback error message when MeshCore connection fails with no specific message.
-  ///
-  /// In en, this message translates to:
-  /// **'MeshCore connection failed'**
-  String get scannerMeshCoreConnectionFailed;
-
-  /// Error snackbar message when MeshCore connection throws an exception.
-  ///
-  /// In en, this message translates to:
-  /// **'MeshCore connection failed: {error}'**
-  String scannerMeshCoreConnectionFailedWithError(String error);
 
   /// Short inline error shown when the saved BLE pairing no longer matches the device after a factory reset, region reset, or BLE identity reset on the radio side. Avoids implying any phone-side fault.
   ///

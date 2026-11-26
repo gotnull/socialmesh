@@ -23447,19 +23447,13 @@
   "@scannerConnectingStatus": {
     "description": "Default status text shown on the connecting animation."
   },
-  "scannerConnectionFailedWithError": "Connection failed: {error}",
-  "@scannerConnectionFailedWithError": {
-    "description": "Error message set when a BLE/MeshCore connection fails with an exception.",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The exception message."
-      }
-    }
-  },
   "scannerConnectionTimedOut": "Connection timed out. The device may be out of range, powered off, or connected to another phone.",
   "@scannerConnectionTimedOut": {
     "description": "User-friendly error message for BLE connection timeout errors."
+  },
+  "scannerConnectionFailed": "Couldn't connect to the device. Check it is on and within range, then try again.",
+  "@scannerConnectionFailed": {
+    "description": "Error shown when connecting to a radio fails for a reason without a more specific message."
   },
   "scannerCopyright": "© 2025-2026 GOTNULL PTY. LTD.\nLicensed under GPL-3.0-or-later.",
   "@scannerCopyright": {
@@ -23562,20 +23556,6 @@
   "scannerGattConnectionFailed": "Connection failed. This can happen if the device was previously paired with another app. Go to Settings > Bluetooth, find the Meshtastic device, tap \"Forget\", then try again.",
   "@scannerGattConnectionFailed": {
     "description": "User-friendly error message for GATT_ERROR 133 or discovery failed BLE errors."
-  },
-  "scannerMeshCoreConnectionFailed": "MeshCore connection failed",
-  "@scannerMeshCoreConnectionFailed": {
-    "description": "Fallback error message when MeshCore connection fails with no specific message."
-  },
-  "scannerMeshCoreConnectionFailedWithError": "MeshCore connection failed: {error}",
-  "@scannerMeshCoreConnectionFailedWithError": {
-    "description": "Error snackbar message when MeshCore connection throws an exception.",
-    "placeholders": {
-      "error": {
-        "type": "String",
-        "description": "The exception message."
-      }
-    }
   },
   "scannerPairingInvalidatedError": "Pairing needs to be refreshed - the radio's Bluetooth identity has changed. Forget the device in Bluetooth Settings and pair again.",
   "@scannerPairingInvalidatedError": {

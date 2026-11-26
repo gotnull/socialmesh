@@ -170,6 +170,31 @@ ScannerSearchSubtitle scannerSearchSubtitle({
       : ScannerSearchSubtitle.looking;
 }
 
+/// A connect failure in words the user can act on: unsupported device,
+/// timeout, an unexpected disconnect, or a generic failure. The exception
+/// text is for the log only and never reaches the banner or a snackbar.
+@visibleForTesting
+String connectFailureMessage(
+  AppLocalizations l10n,
+  Object error, {
+  MeshProtocolError? protocolError,
+}) {
+  if (protocolError == MeshProtocolError.unsupportedDevice) {
+    return l10n.scannerUnsupportedDeviceMessage;
+  }
+  final text = error.toString().toLowerCase();
+  if (protocolError == MeshProtocolError.timeout ||
+      text.contains('timed out') ||
+      text.contains('timeout')) {
+    return l10n.scannerConnectionTimedOut;
+  }
+  if (text.contains('device is disconnected') ||
+      text.contains('disconnected during')) {
+    return l10n.scannerDeviceDisconnectedUnexpectedly;
+  }
+  return l10n.scannerConnectionFailed;
+}
+
 /// Whether the saved device is a MeshCore radio. A MeshCore Bluetooth
 /// connection saves the bare BLE remote id and records the protocol
 /// alongside it; only MeshCore TCP ids carry a `meshcore-` prefix.
@@ -2019,18 +2044,20 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       if (!mounted) return;
 
       if (!result.success) {
-        // Connection failed
+        AppLogging.connection(
+          'SCANNER: MeshCore connect failed: ${result.errorMessage} '
+          '(${result.protocolError?.name ?? 'no protocol error'})',
+        );
         safeSetState(() {
           _connecting = false;
           _connectingMeshCore = false;
-          _errorMessage =
-              result.errorMessage ??
-              context.l10n.scannerMeshCoreConnectionFailed;
+          _errorMessage = connectFailureMessage(
+            context.l10n,
+            result.errorMessage ?? '',
+            protocolError: result.protocolError,
+          );
         });
-        showErrorSnackBar(
-          context,
-          result.errorMessage ?? context.l10n.scannerMeshCoreConnectionFailed,
-        );
+        showErrorSnackBar(context, _errorMessage!);
         return;
       }
 
@@ -2106,14 +2133,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       safeSetState(() {
         _connecting = false;
         _connectingMeshCore = false;
-        _errorMessage = context.l10n.scannerConnectionFailedWithError(
-          e.toString(),
-        );
+        _errorMessage = connectFailureMessage(context.l10n, e);
       });
-      showErrorSnackBar(
-        context,
-        context.l10n.scannerMeshCoreConnectionFailedWithError(e.toString()),
-      );
+      showErrorSnackBar(context, _errorMessage!);
     }
   }
 
@@ -2376,21 +2398,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
 
       if (!mounted) return;
 
-      final sanitizedMessage = e.toString().replaceFirst('Exception: ', '');
       final pairingInvalidation = conn.isPairingInvalidationError(e);
       final pairingMessage = context.l10n.scannerPairingInvalidatedError;
 
       // Provide user-friendly error messages for common BLE errors
       final errorLower = e.toString().toLowerCase();
-      final isTimeout =
-          errorLower.contains('timed out') || errorLower.contains('timeout');
       final isGattError =
           errorLower.contains('gatt_error') ||
           errorLower.contains('android-code: 133');
       final isDiscoveryFailed = errorLower.contains('discovery failed');
-      final isDeviceDisconnected = errorLower.contains(
-        'device is disconnected', // lint-allow: hardcoded-string
-      );
 
       String userMessage;
       if (pairingInvalidation) {
@@ -2401,12 +2417,8 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
         // - Device is connected to another phone
         // - BLE cache is corrupted
         userMessage = context.l10n.scannerGattConnectionFailed;
-      } else if (isTimeout) {
-        userMessage = context.l10n.scannerConnectionTimedOut;
-      } else if (isDeviceDisconnected) {
-        userMessage = context.l10n.scannerDeviceDisconnectedUnexpectedly;
       } else {
-        userMessage = sanitizedMessage;
+        userMessage = connectFailureMessage(context.l10n, e);
       }
 
       // Clear the manualConnecting latch on terminal failure. Without

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A failed connect on the Devices screen now says what went wrong in plain words, such as that the connection timed out or the device disconnected, instead of showing the raw error text from the Bluetooth plugin.
 - When a MeshCore radio drops out by itself, such as going out of range or switching off, the app now notices straight away: it shows MeshCore Disconnected and starts reconnecting, or sets up the background reconnect while the app is in the background. It used to keep showing the radio as connected and only reconnected the next time the app came to the front.
 - MeshCore screens such as Messages no longer stay on MeshCore Disconnected after the radio has connected. A connection that completed at the moment the app started tracking the radio's state could be missed, so the screen kept the old state while the device sheet showed the radio as connected.
 
