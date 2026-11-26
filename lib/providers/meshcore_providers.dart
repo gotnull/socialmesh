@@ -80,24 +80,26 @@ final meshCoreConnectionStateProvider = StreamProvider<MeshConnectionState>((
 ) {
   final coordinator = ref.watch(connectionCoordinatorProvider);
 
-  // Determine current state from coordinator
-  MeshConnectionState currentState;
-  if (coordinator.isConnected) {
-    currentState = MeshConnectionState.connected;
-  } else if (coordinator.isConnecting) {
-    currentState = MeshConnectionState.connecting;
-  } else {
-    currentState = MeshConnectionState.disconnected;
-  }
-
-  // Emit current state first, then forward all future state changes.
-  // This ensures new subscribers see the current state immediately.
-  return Stream.value(currentState).asyncExpand((initial) async* {
-    yield initial;
-    await for (final state in coordinator.stateStream) {
-      yield state;
-    }
+  // The coordinator's stream is broadcast and replays nothing, so it is
+  // subscribed before the current state is read: a change announced at any
+  // point after this build is queued behind that state instead of lost.
+  final states = StreamController<MeshConnectionState>();
+  final subscription = coordinator.stateStream.listen(
+    states.add,
+    onError: states.addError,
+  );
+  ref.onDispose(() {
+    subscription.cancel();
+    states.close();
   });
+  states.add(
+    coordinator.isConnected
+        ? MeshConnectionState.connected
+        : coordinator.isConnecting
+        ? MeshConnectionState.connecting
+        : MeshConnectionState.disconnected,
+  );
+  return states.stream;
 });
 
 /// Provider for the current protocol-agnostic device info.

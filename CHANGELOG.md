@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- MeshCore screens such as Messages no longer stay on MeshCore Disconnected after the radio has connected. A connection that completed at the moment the app started tracking the radio's state could be missed, so the screen kept the old state while the device sheet showed the radio as connected.
+
 ## [1.85.0] - 2026-11-26
 
 ### Changed
