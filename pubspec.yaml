@@ -22,7 +22,7 @@ dependencies:
   nordic_dfu: ^8.1.0
 
   # USB Serial Communication
-  usb_serial: ^0.5.2
+  usb_serial: ^0.6.0
 
   # Protobuf
   protobuf: ^6.1.0
