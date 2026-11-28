@@ -1,0 +1,7 @@
+{
+  "app_store_whats_new": "The MeshCore QR scanner can read a contact or channel QR code from a picture in your photo library, such as a screenshot someone sent you. Tap the photo button next to the torch.\n\nThe US bandwidth note in MeshCore radio settings is now shown as information instead of a warning. It appears on the standard USA/Canada preset that MeshCore radios in the US use, so the amber warning style suggested something was wrong with a normal setup. The wording is unchanged.",
+  "play": {
+    "en-GB": "The MeshCore QR scanner can read a contact or channel QR code from a picture in your photo library, such as a screenshot someone sent you.\nThe US bandwidth note in MeshCore radio settings is now shown as information instead of a warning."
+  },
+  "testflight_what_to_test": "New and changed in 1.86.0:\n- The MeshCore QR scanner can read a contact or channel QR code from a picture in your photo library, such as a screenshot someone sent you. Tap the photo button next to the torch.\n- The US bandwidth note in MeshCore radio settings is now shown as information instead of a warning. It appears on the standard USA/Canada preset that MeshCore radios in the US use, so the amber warning style suggested something was wrong with a normal setup. The wording is unchanged.\n\nThis build also has everything released before 1.86.0."
+}
