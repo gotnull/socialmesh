@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The MeshCore QR scanner can read a contact or channel QR code from a picture in your photo library, such as a screenshot someone sent you. Tap the photo button next to the torch.
 
+### Changed
+
+- The US bandwidth note in MeshCore radio settings is now shown as information instead of a warning. It appears on the standard USA/Canada preset that MeshCore radios in the US use, so the amber warning style suggested something was wrong with a normal setup. The wording is unchanged.
+
 ## [1.85.0] - 2026-11-26
 
 ### Changed

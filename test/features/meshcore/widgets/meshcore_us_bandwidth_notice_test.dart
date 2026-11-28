@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socialmesh/core/widgets/status_banner.dart';
 import 'package:socialmesh/features/meshcore/widgets/meshcore_radio_settings_sheet.dart';
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
@@ -95,6 +96,10 @@ void main() {
       find.text(_l10n.meshcoreRadioSettingsUsBandwidthNoticeBody),
       findsOneWidget,
     );
+    final banner = tester.widget<StatusBanner>(
+      find.ancestor(of: _noticeTitle, matching: find.byType(StatusBanner)),
+    );
+    expect(banner.type, StatusBannerType.info);
     await _closeSheet(tester);
   });
 
