@@ -17478,6 +17478,24 @@ abstract class AppLocalizations {
   /// **'Not a valid MeshCore contact QR code'**
   String get meshcoreNotValidContactQr;
 
+  /// Tooltip of the MeshCore QR scanner app bar button that decodes a contact or channel QR code from an image in the photo library instead of the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from photos'**
+  String get meshcoreQrPickFromPhotos;
+
+  /// Error snackbar when the image picked from the photo library on the MeshCore QR scanner contains no readable QR code.
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found in that image'**
+  String get meshcoreQrPhotoNoCodeFound;
+
+  /// Error snackbar when the photo library could not be opened from the MeshCore QR scanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open your photos'**
+  String get meshcoreQrPhotoOpenFailed;
+
   /// Channel options action label
   ///
   /// In en, this message translates to:

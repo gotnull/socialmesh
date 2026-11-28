@@ -31703,6 +31703,18 @@
   "meshcoreNotSet": "Non impostato",
   "meshcoreNotValidChannelQr": "Codice QR canale MeshCore non valido",
   "meshcoreNotValidContactQr": "Codice QR contatto MeshCore non valido",
+  "meshcoreQrPickFromPhotos": "Scegli dalle foto",
+  "@meshcoreQrPickFromPhotos": {
+    "description": "Tooltip of the MeshCore QR scanner app bar button that decodes a contact or channel QR code from an image in the photo library instead of the camera."
+  },
+  "meshcoreQrPhotoNoCodeFound": "Nessun codice QR trovato in quell'immagine",
+  "@meshcoreQrPhotoNoCodeFound": {
+    "description": "Error snackbar when the image picked from the photo library on the MeshCore QR scanner contains no readable QR code."
+  },
+  "meshcoreQrPhotoOpenFailed": "Impossibile aprire le tue foto",
+  "@meshcoreQrPhotoOpenFailed": {
+    "description": "Error snackbar when the photo library could not be opened from the MeshCore QR scanner."
+  },
   "meshcoreOpenChannel": "Apri Canale",
   "meshcoreOpenInExternalMapApp": "Apri nell'app mappe esterna",
   "meshcoreOpenMidpointInMaps": "Apri Punto Medio in Mappe",

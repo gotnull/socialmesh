@@ -13537,6 +13537,18 @@
   "@meshcoreNotValidContactQr": {
     "description": "Error snackbar for invalid contact QR code"
   },
+  "meshcoreQrPickFromPhotos": "Choose from photos",
+  "@meshcoreQrPickFromPhotos": {
+    "description": "Tooltip of the MeshCore QR scanner app bar button that decodes a contact or channel QR code from an image in the photo library instead of the camera."
+  },
+  "meshcoreQrPhotoNoCodeFound": "No QR code found in that image",
+  "@meshcoreQrPhotoNoCodeFound": {
+    "description": "Error snackbar when the image picked from the photo library on the MeshCore QR scanner contains no readable QR code."
+  },
+  "meshcoreQrPhotoOpenFailed": "Could not open your photos",
+  "@meshcoreQrPhotoOpenFailed": {
+    "description": "Error snackbar when the photo library could not be opened from the MeshCore QR scanner."
+  },
   "meshcoreOpenChannel": "Open Channel",
   "@meshcoreOpenChannel": {
     "description": "Channel options action label"

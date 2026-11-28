@@ -602,7 +602,10 @@ class _MeshCoreRadioSettingsSheetState
             presetId: _selectedPresetId,
             bandwidthKhz: _bandwidthKhz,
           ))
-            StatusBanner.warning(
+            // Info, not warning: the USA/Canada preset is the community
+            // default every nearby MeshCore radio runs, so an amber banner
+            // on it reads as an error the user cannot act on alone.
+            StatusBanner.info(
               title: l10n.meshcoreRadioSettingsUsBandwidthNoticeTitle,
               subtitle: l10n.meshcoreRadioSettingsUsBandwidthNoticeBody,
               margin: const EdgeInsets.symmetric(

@@ -7,16 +7,19 @@ import '../../../core/l10n/l10n_extension.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
+import '../../../core/widgets/auto_scroll_text.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../core/widgets/qr_scanner_overlay.dart';
 import '../../../models/meshcore_channel.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
+import '../../../services/haptic_service.dart';
 import '../meshcore_channel_slots.dart';
 import '../../../utils/snackbar.dart';
 import 'meshcore_contact_import_sheet.dart';
@@ -38,7 +41,11 @@ class MeshCoreQrScannerScreen extends ConsumerStatefulWidget {
 class _MeshCoreQrScannerScreenState
     extends ConsumerState<MeshCoreQrScannerScreen>
     with LifecycleSafeMixin<MeshCoreQrScannerScreen> {
-  final MobileScannerController _controller = MobileScannerController();
+  // initState starts the camera itself; letting MobileScanner auto-start as
+  // well races the two start() calls and throws controllerInitializing.
+  final MobileScannerController _controller = MobileScannerController(
+    autoStart: false,
+  );
   StreamSubscription<BarcodeCapture>? _barcodeSubscription;
   bool _isProcessing = false;
   String? _lastScannedCode;
@@ -101,6 +108,58 @@ class _MeshCoreQrScannerScreenState
       _isProcessing = true;
     });
 
+    _processQrCode(code);
+  }
+
+  // People often share a contact or channel QR as a screenshot, which the
+  // camera cannot scan on the same phone, so the code can also be decoded
+  // from an image in the photo library.
+  Future<void> _pickFromPhotos() async {
+    if (_isProcessing) return;
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    final l10n = context.l10n;
+    safeSetState(() => _isProcessing = true);
+
+    final XFile? picked;
+    try {
+      picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    } catch (e) {
+      AppLogging.meshcore('event=qr_scanner.photo_pick_failed error=$e');
+      if (!mounted) return;
+      safeSetState(() => _isProcessing = false);
+      showErrorSnackBar(context, l10n.meshcoreQrPhotoOpenFailed);
+      return;
+    }
+    if (!mounted) return;
+    if (picked == null) {
+      safeSetState(() => _isProcessing = false);
+      return;
+    }
+
+    String? code;
+    try {
+      final capture = await _controller.analyzeImage(
+        picked.path,
+        formats: const [BarcodeFormat.qrCode],
+      );
+      code = capture?.barcodes.firstOrNull?.rawValue;
+    } catch (e) {
+      AppLogging.meshcore('event=qr_scanner.photo_analyse_failed error=$e');
+    }
+    if (!mounted) return;
+    if (code == null || code.isEmpty) {
+      AppLogging.meshcore(
+        'event=qr_scanner.photo_no_code mode=${widget.mode.name}',
+      );
+      safeSetState(() => _isProcessing = false);
+      showErrorSnackBar(context, l10n.meshcoreQrPhotoNoCodeFound);
+      return;
+    }
+
+    AppLogging.meshcore(
+      'event=qr_scanner.photo_decoded mode=${widget.mode.name}',
+    );
+    _lastScannedCode = code;
     _processQrCode(code);
   }
 
@@ -336,12 +395,26 @@ class _MeshCoreQrScannerScreenState
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: Text(title, style: const TextStyle(color: Colors.white)),
+        // AutoScrollText measures with the style it is given, so it gets the
+        // full app bar title style rather than relying on AppBar's merge.
+        title: AutoScrollText(
+          title,
+          style: Theme.of(context).appBarTheme.titleTextStyle
+              ?.copyWith(color: Colors.white),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.photo_library_outlined,
+              color: Colors.white70,
+            ),
+            tooltip: context.l10n.meshcoreQrPickFromPhotos,
+            onPressed: _isProcessing ? null : _pickFromPhotos,
+          ),
           IconButton(
             icon: Icon(
               _controller.torchEnabled ? Icons.flash_on : Icons.flash_off,

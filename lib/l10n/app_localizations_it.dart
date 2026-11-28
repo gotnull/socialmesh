@@ -10303,6 +10303,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'Codice QR contatto MeshCore non valido';
 
   @override
+  String get meshcoreQrPickFromPhotos => 'Scegli dalle foto';
+
+  @override
+  String get meshcoreQrPhotoNoCodeFound =>
+      'Nessun codice QR trovato in quell\'immagine';
+
+  @override
+  String get meshcoreQrPhotoOpenFailed => 'Impossibile aprire le tue foto';
+
+  @override
   String get meshcoreOpenChannel => 'Apri Canale';
 
   @override
