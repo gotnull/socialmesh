@@ -90,6 +90,7 @@ Widget _wrap({MeshCoreSession? session, MeshCoreContact? initialContact}) =>
       overrides: [
         meshCoreSessionProvider.overrideWithValue(session),
         meshCoreContactsProvider.overrideWith(_Roster.new),
+        meshCoreSelfPubKeyPrefixProvider.overrideWithValue('5a7e0001'),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -234,10 +235,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(
-        find.text(l.meshcoreTraceRouteBytes(3, kMeshCoreTraceMaxPathBytes)),
-        findsOneWidget,
-      );
+      expect(find.text(l.meshcoreTraceRouteCapacity(2, 16)), findsOneWidget);
       expect(_primary(tester).enabled, isTrue);
 
       await _tap(tester, find.text(l.meshcoreTracePathRunButton));
@@ -248,17 +246,18 @@ void main() {
       expect(find.text('Coburg Hill'), findsNWidgets(2));
       expect(find.text('Bendigo Relay'), findsOneWidget);
 
-      await _tap(tester, find.text(l.meshcoreTraceRouteTraceReversed));
-      expect(session.paths.last, [0x40, 0x30, 0x40]);
+      // Returning the same way already measures both directions, so the
+      // result offers no reversed run.
+      expect(find.text(l.meshcoreTraceRouteTraceReversed), findsNothing);
 
       await _tap(tester, find.text(l.meshcoreTraceRouteEdit));
       expect(
         find.text(
           [
             you,
-            'Bendigo Relay',
             'Coburg Hill',
             'Bendigo Relay',
+            'Coburg Hill',
             you,
           ].join(_arrow),
         ),
@@ -276,7 +275,8 @@ void main() {
       await _tap(tester, find.text(l.meshcoreTraceModeCustom));
       await _tap(tester, find.text('Coburg Hill'));
       await _tap(tester, find.text('Bendigo Relay').last);
-      await _tap(tester, find.byType(Switch).first);
+      // The row's title toggles it, not only the switch.
+      await _tap(tester, find.text(l.meshcoreTraceRouteReturnTitle));
       expect(find.text(l.meshcoreTraceRouteReturnOff), findsOneWidget);
 
       await _tap(tester, find.byTooltip(l.meshcoreTraceRouteReverse));
@@ -289,9 +289,16 @@ void main() {
       await _tap(tester, find.text(l.meshcoreTracePathRunButton));
       expect(session.paths.single, [0x40, 0x30]);
 
+      // One way, the other order is a different test.
+      await _tap(tester, find.text(l.meshcoreTraceRouteTraceReversed));
+      expect(session.paths.last, [0x30, 0x40]);
+
       await _tap(tester, find.text(l.meshcoreTraceRouteEdit));
       await _tap(tester, find.byTooltip(l.meshcoreTraceRouteRemoveHop).first);
-      expect(find.text([you, 'Coburg Hill', you].join(_arrow)), findsOneWidget);
+      expect(
+        find.text([you, 'Bendigo Relay', you].join(_arrow)),
+        findsOneWidget,
+      );
       await _tap(tester, find.byTooltip(l.meshcoreTraceRouteClear));
       expect(find.text(l.meshcoreTraceRouteEmpty), findsOneWidget);
     });

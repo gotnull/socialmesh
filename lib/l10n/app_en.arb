@@ -14706,9 +14706,9 @@
   "@meshcoreTraceRouteYou": {
     "description": "Trace Path route builder: the connected radio as the start and end of the route."
   },
-  "meshcoreTraceRouteReverse": "Reverse route",
+  "meshcoreTraceRouteReverse": "Reverse hop order",
   "@meshcoreTraceRouteReverse": {
-    "description": "Trace Path route builder: tooltip for the button that reverses the hop order."
+    "description": "Trace Path route builder: tooltip for the button that reverses the order of the hops."
   },
   "meshcoreTraceRouteClear": "Clear route",
   "@meshcoreTraceRouteClear": {
@@ -14742,9 +14742,9 @@
       }
     }
   },
-  "meshcoreTraceRouteBytes": "{used} of {max} bytes",
-  "@meshcoreTraceRouteBytes": {
-    "description": "Trace Path route builder: bytes the trace request uses out of the firmware limit.",
+  "meshcoreTraceRouteCapacity": "{used} of {max} hops",
+  "@meshcoreTraceRouteCapacity": {
+    "description": "Trace Path route builder: hops in the route out of the most this hash size and return setting allow.",
     "placeholders": {
       "used": {
         "type": "int",
@@ -14756,9 +14756,9 @@
       }
     }
   },
-  "meshcoreTraceRouteTooLong": "Over the {max}-byte trace limit. Remove a hop or use a smaller hash size.",
+  "meshcoreTraceRouteTooLong": "Too long for this hash size, which allows {max} hops.",
   "@meshcoreTraceRouteTooLong": {
-    "description": "Trace Path route builder: the route is over the firmware trace size limit.",
+    "description": "Trace Path route builder: the route has more hops than the hash size and return setting allow; max is that limit.",
     "placeholders": {
       "max": {
         "type": "int",
@@ -14833,9 +14833,13 @@
   "@meshcoreTraceRouteTraceAgain": {
     "description": "Trace Path: result button that runs the same route trace again."
   },
-  "meshcoreTraceRouteTimeoutNote": "No answer came back. A repeater on the route may be out of range or switched off. Reversing the route sometimes gets through.",
+  "meshcoreTraceRouteTimeoutNote": "No answer came back. A repeater on the route may be out of range or switched off.",
   "@meshcoreTraceRouteTimeoutNote": {
-    "description": "Trace Path: note on the timeout banner for a hand-built route."
+    "description": "Trace Path: note on the timeout banner for a hand-built route that returns the same way."
+  },
+  "meshcoreTraceRouteTimeoutNoteOneWay": "No answer came back. A repeater on the route may be out of range or switched off, or your radio may not hear the last one directly. Try the hops in the other order.",
+  "@meshcoreTraceRouteTimeoutNoteOneWay": {
+    "description": "Trace Path: note on the timeout banner for a hand-built route sent one way."
   },
   "meshcoreTxPowerLabel": "TX Power",
   "@meshcoreTxPowerLabel": {

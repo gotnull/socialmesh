@@ -11193,7 +11193,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'Você';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Inverter rota';
+  String get meshcoreTraceRouteReverse => 'Inverter a ordem dos saltos';
 
   @override
   String get meshcoreTraceRouteClear => 'Limpar rota';
@@ -11234,7 +11234,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11244,7 +11244,7 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString de $maxString bytes';
+    return '$usedString de $maxString saltos';
   }
 
   @override
@@ -11254,7 +11254,7 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Passa do limite de $maxString bytes do rastreamento. Remova um salto ou use um tamanho de hash menor.';
+    return 'Longa demais para este tamanho de hash, que permite $maxString saltos.';
   }
 
   @override
@@ -11318,7 +11318,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'Nenhuma resposta voltou. Um repetidor da rota pode estar fora de alcance ou desligado. Às vezes a rota invertida funciona.';
+      'Nenhuma resposta voltou. Um repetidor da rota pode estar fora de alcance ou desligado.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'Nenhuma resposta voltou. Um repetidor da rota pode estar fora de alcance ou desligado, ou seu rádio pode não ouvir o último diretamente. Tente os saltos na ordem inversa.';
 
   @override
   String get meshcoreTxPowerLabel => 'Potência TX';

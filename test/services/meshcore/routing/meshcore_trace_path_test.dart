@@ -247,6 +247,34 @@ void main() {
     });
   });
 
+  test('route capacity in hops for each hash size', () {
+    int max(int size, bool back) =>
+        meshCoreRouteTraceMaxHops(hashSize: size, returnSameWay: back);
+    expect([max(1, true), max(2, true), max(4, true)], [16, 8, 4]);
+    expect([max(1, false), max(2, false), max(4, false)], [32, 16, 8]);
+    // The largest route at each size still fits the payload.
+    for (final size in kMeshCoreTraceHashSizes) {
+      for (final back in [true, false]) {
+        expect(
+          meshCoreRouteTraceBytes(
+            hopCount: max(size, back),
+            hashSize: size,
+            returnSameWay: back,
+          ),
+          lessThanOrEqualTo(kMeshCoreTraceMaxPathBytes),
+        );
+        expect(
+          meshCoreRouteTraceBytes(
+            hopCount: max(size, back) + 1,
+            hashSize: size,
+            returnSameWay: back,
+          ),
+          greaterThan(kMeshCoreTraceMaxPathBytes),
+        );
+      }
+    }
+  });
+
   test('hop candidates are repeaters and rooms, newest first', () {
     final older = _contact(0xA0);
     final newer = MeshCoreContact(

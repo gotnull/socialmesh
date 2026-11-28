@@ -95,6 +95,17 @@ int meshCoreRouteTraceBytes({
   return (returnSameWay ? 2 * hopCount - 1 : hopCount) * hashSize;
 }
 
+/// Most hops a hand-built route can hold at [hashSize] within
+/// [kMeshCoreTraceMaxPathBytes]: 16, 8 and 4 returning the same way at 1,
+/// 2 and 4 bytes, and 32, 16 and 8 one way.
+int meshCoreRouteTraceMaxHops({
+  required int hashSize,
+  required bool returnSameWay,
+}) {
+  final slots = kMeshCoreTraceMaxPathBytes ~/ hashSize;
+  return returnSameWay ? (slots + 1) ~/ 2 : slots;
+}
+
 /// Builds a trace along a route the user put together by hand: out
 /// through [hops] in order and, when [returnSameWay] is set, back through
 /// the same repeaters in reverse so the answer retraces the route.

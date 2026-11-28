@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- MeshCore Trace Path can follow a route you build yourself. Choose Build a route, then tap repeaters by name in the order the trace should travel, or type a key prefix for one your radio has not heard. Drag hops to reorder them, reverse the route with one tap, and pick whether the trace comes back the same way. The hop hash can be 1, 2 or 4 bytes, and the sheet counts bytes against the 32-byte trace limit. When several known repeaters share a hop's prefix, the hop says how many. The route stays put between attempts, and a result offers Trace again and Trace reversed.
+- MeshCore Trace Path can follow a route you build yourself. Choose Build a route, then tap repeaters by name in the order the trace should travel, or type a key prefix for one your radio has not heard. Drag hops to reorder them, reverse the route with one tap, and pick whether the trace comes back the same way. The hop hash can be 1, 2 or 4 bytes, and the sheet shows how many hops that leaves room for. When several known repeaters share a hop's prefix, the hop says how many. The route stays put between attempts until you connect a different radio. A result offers Trace again, and for a one-way route Trace reversed, which runs the hops in the other order.
 
 ### Changed
 

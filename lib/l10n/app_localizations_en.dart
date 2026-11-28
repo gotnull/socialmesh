@@ -11297,7 +11297,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'You';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Reverse route';
+  String get meshcoreTraceRouteReverse => 'Reverse hop order';
 
   @override
   String get meshcoreTraceRouteClear => 'Clear route';
@@ -11332,7 +11332,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11342,7 +11342,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString of $maxString bytes';
+    return '$usedString of $maxString hops';
   }
 
   @override
@@ -11352,7 +11352,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Over the $maxString-byte trace limit. Remove a hop or use a smaller hash size.';
+    return 'Too long for this hash size, which allows $maxString hops.';
   }
 
   @override
@@ -11416,7 +11416,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'No answer came back. A repeater on the route may be out of range or switched off. Reversing the route sometimes gets through.';
+      'No answer came back. A repeater on the route may be out of range or switched off.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'No answer came back. A repeater on the route may be out of range or switched off, or your radio may not hear the last one directly. Try the hops in the other order.';
 
   @override
   String get meshcoreTxPowerLabel => 'TX Power';

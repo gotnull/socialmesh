@@ -11441,7 +11441,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'Вы';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Развернуть маршрут';
+  String get meshcoreTraceRouteReverse => 'Обратный порядок хопов';
 
   @override
   String get meshcoreTraceRouteClear => 'Очистить маршрут';
@@ -11487,7 +11487,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11497,7 +11497,7 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString из $maxString байт';
+    return '$usedString из $maxString хопов';
   }
 
   @override
@@ -11507,7 +11507,7 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Превышен лимит трассировки в $maxString байт. Уберите хоп или выберите меньший размер хеша.';
+    return 'Слишком длинный маршрут для этого размера хеша. Максимум хопов: $maxString.';
   }
 
   @override
@@ -11573,7 +11573,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'Ответ не пришёл. Возможно, ретранслятор на маршруте вне зоны связи или выключен. Иногда помогает развернуть маршрут.';
+      'Ответ не пришёл. Возможно, ретранслятор на маршруте вне зоны связи или выключен.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'Ответ не пришёл. Возможно, ретранслятор на маршруте вне зоны связи или выключен, либо ваша рация не слышит последний напрямую. Попробуйте хопы в обратном порядке.';
 
   @override
   String get meshcoreTxPowerLabel => 'Мощность TX';

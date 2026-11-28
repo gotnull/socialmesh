@@ -1337,9 +1337,11 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               else if (_timedOut)
                 StatusBanner.warning(
                   title: l.meshcoreTracePathTimeout,
-                  subtitle: _customRoute
+                  subtitle: !_customRoute
+                      ? l.meshcoreTracePathRepeatNote
+                      : route.returnSameWay
                       ? l.meshcoreTraceRouteTimeoutNote
-                      : l.meshcoreTracePathRepeatNote,
+                      : l.meshcoreTraceRouteTimeoutNoteOneWay,
                   icon: Icons.hourglass_empty_rounded,
                 )
               else if (_customRoute)
@@ -1366,16 +1368,20 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
                         label: Text(l.meshcoreTraceRouteEdit),
                       ),
                     ),
-                    const SizedBox(width: AppTheme.spacing12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: route.hops.length < 2
-                            ? null
-                            : _reverseAndTrace,
-                        icon: const Icon(Icons.swap_vert_rounded),
-                        label: Text(l.meshcoreTraceRouteTraceReversed),
+                    // A route that returns the same way already measures
+                    // both directions; reversing it would only change which
+                    // repeater the radio must reach first. One way, the
+                    // other order is a different test.
+                    if (!route.returnSameWay && route.hops.length > 1) ...[
+                      const SizedBox(width: AppTheme.spacing12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _reverseAndTrace,
+                          icon: const Icon(Icons.swap_vert_rounded),
+                          label: Text(l.meshcoreTraceRouteTraceReversed),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: AppTheme.spacing8),

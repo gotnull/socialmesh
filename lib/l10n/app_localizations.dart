@@ -19026,10 +19026,10 @@ abstract class AppLocalizations {
   /// **'You'**
   String get meshcoreTraceRouteYou;
 
-  /// Trace Path route builder: tooltip for the button that reverses the hop order.
+  /// Trace Path route builder: tooltip for the button that reverses the order of the hops.
   ///
   /// In en, this message translates to:
-  /// **'Reverse route'**
+  /// **'Reverse hop order'**
   String get meshcoreTraceRouteReverse;
 
   /// Trace Path route builder: tooltip for the button that removes every hop.
@@ -19062,16 +19062,16 @@ abstract class AppLocalizations {
   /// **'Needs a {bytes}-byte prefix'**
   String meshcoreTraceRouteHopTooShort(int bytes);
 
-  /// Trace Path route builder: bytes the trace request uses out of the firmware limit.
+  /// Trace Path route builder: hops in the route out of the most this hash size and return setting allow.
   ///
   /// In en, this message translates to:
-  /// **'{used} of {max} bytes'**
-  String meshcoreTraceRouteBytes(int used, int max);
+  /// **'{used} of {max} hops'**
+  String meshcoreTraceRouteCapacity(int used, int max);
 
-  /// Trace Path route builder: the route is over the firmware trace size limit.
+  /// Trace Path route builder: the route has more hops than the hash size and return setting allow; max is that limit.
   ///
   /// In en, this message translates to:
-  /// **'Over the {max}-byte trace limit. Remove a hop or use a smaller hash size.'**
+  /// **'Too long for this hash size, which allows {max} hops.'**
   String meshcoreTraceRouteTooLong(int max);
 
   /// Trace Path route builder: toggle that sends the trace back through the same repeaters.
@@ -19158,11 +19158,17 @@ abstract class AppLocalizations {
   /// **'Trace again'**
   String get meshcoreTraceRouteTraceAgain;
 
-  /// Trace Path: note on the timeout banner for a hand-built route.
+  /// Trace Path: note on the timeout banner for a hand-built route that returns the same way.
   ///
   /// In en, this message translates to:
-  /// **'No answer came back. A repeater on the route may be out of range or switched off. Reversing the route sometimes gets through.'**
+  /// **'No answer came back. A repeater on the route may be out of range or switched off.'**
   String get meshcoreTraceRouteTimeoutNote;
+
+  /// Trace Path: note on the timeout banner for a hand-built route sent one way.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer came back. A repeater on the route may be out of range or switched off, or your radio may not hear the last one directly. Try the hops in the other order.'**
+  String get meshcoreTraceRouteTimeoutNoteOneWay;
 
   /// Info row label for TX power
   ///

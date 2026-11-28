@@ -11518,7 +11518,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'Vous';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Inverser la route';
+  String get meshcoreTraceRouteReverse => 'Inverser l\'ordre des sauts';
 
   @override
   String get meshcoreTraceRouteClear => 'Effacer la route';
@@ -11559,7 +11559,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11569,7 +11569,7 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString sur $maxString octets';
+    return '$usedString sur $maxString sauts';
   }
 
   @override
@@ -11579,7 +11579,7 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Dépasse la limite de $maxString octets de la trace. Retirez un saut ou choisissez une taille de hachage plus petite.';
+    return 'Trop longue pour cette taille de hachage, qui permet $maxString sauts.';
   }
 
   @override
@@ -11643,7 +11643,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'Aucune réponse reçue. Un répéteur de la route est peut-être hors de portée ou éteint. Inverser la route permet parfois de passer.';
+      'Aucune réponse reçue. Un répéteur de la route est peut-être hors de portée ou éteint.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'Aucune réponse reçue. Un répéteur de la route est peut-être hors de portée ou éteint, ou votre radio n\'entend pas directement le dernier. Essayez les sauts dans l\'ordre inverse.';
 
   @override
   String get meshcoreTxPowerLabel => 'Puissance TX';

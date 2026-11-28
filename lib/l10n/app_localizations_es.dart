@@ -11485,7 +11485,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'Tú';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Invertir ruta';
+  String get meshcoreTraceRouteReverse => 'Invertir el orden de los saltos';
 
   @override
   String get meshcoreTraceRouteClear => 'Borrar ruta';
@@ -11526,7 +11526,7 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11536,7 +11536,7 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString de $maxString bytes';
+    return '$usedString de $maxString saltos';
   }
 
   @override
@@ -11546,7 +11546,7 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Supera el límite de $maxString bytes del trazado. Quita un salto o usa un tamaño de hash menor.';
+    return 'Demasiado larga para este tamaño de hash, que admite $maxString saltos.';
   }
 
   @override
@@ -11610,7 +11610,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'No llegó respuesta. Puede que un repetidor de la ruta esté fuera de alcance o apagado. A veces la ruta invertida sí llega.';
+      'No llegó respuesta. Puede que un repetidor de la ruta esté fuera de alcance o apagado.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'No llegó respuesta. Puede que un repetidor de la ruta esté fuera de alcance o apagado, o que tu radio no oiga directamente el último. Prueba los saltos en el orden inverso.';
 
   @override
   String get meshcoreTxPowerLabel => 'Potencia TX';

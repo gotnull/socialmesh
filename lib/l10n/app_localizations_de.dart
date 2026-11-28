@@ -11463,7 +11463,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'Sie';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Route umkehren';
+  String get meshcoreTraceRouteReverse => 'Hop-Reihenfolge umkehren';
 
   @override
   String get meshcoreTraceRouteClear => 'Route leeren';
@@ -11504,7 +11504,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11514,7 +11514,7 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString von $maxString Bytes';
+    return '$usedString von $maxString Hops';
   }
 
   @override
@@ -11524,7 +11524,7 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Über dem Trace-Limit von $maxString Bytes. Entfernen Sie einen Hop oder wählen Sie eine kleinere Hash-Größe.';
+    return 'Zu lang für diese Hash-Größe, die $maxString Hops erlaubt.';
   }
 
   @override
@@ -11588,7 +11588,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'Keine Antwort erhalten. Ein Repeater auf der Route ist eventuell außer Reichweite oder ausgeschaltet. Mit umgekehrter Route klappt es manchmal.';
+      'Keine Antwort erhalten. Ein Repeater auf der Route ist eventuell außer Reichweite oder ausgeschaltet.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'Keine Antwort erhalten. Ein Repeater auf der Route ist eventuell außer Reichweite oder ausgeschaltet, oder Ihr Funkgerät empfängt den letzten nicht direkt. Versuchen Sie die Hops in umgekehrter Reihenfolge.';
 
   @override
   String get meshcoreTxPowerLabel => 'TX-Leistung';

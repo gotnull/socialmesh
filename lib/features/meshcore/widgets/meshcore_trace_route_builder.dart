@@ -21,7 +21,6 @@ import '../../../core/widgets/settings_primitives.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/haptic_service.dart';
-import '../../../services/meshcore/protocol/meshcore_messages.dart';
 import '../../../services/meshcore/routing/meshcore_trace_path.dart';
 import '../../../utils/encoding.dart';
 
@@ -56,13 +55,6 @@ class MeshCoreTraceRouteDraft {
   /// Bytes of key prefix per hop: 1, 2 or 4.
   final int hashSize;
 
-  /// Bytes the trace request will carry.
-  int get traceBytes => meshCoreRouteTraceBytes(
-    hopCount: hops.length,
-    hashSize: hashSize,
-    returnSameWay: returnSameWay,
-  );
-
   /// The request for this route, or null when it cannot be sent: empty,
   /// a typed hop shorter than [hashSize], or over the payload limit.
   MeshCoreTraceRequest? get request {
@@ -91,8 +83,22 @@ class MeshCoreTraceRouteDraft {
 }
 
 class MeshCoreTraceRouteNotifier extends Notifier<MeshCoreTraceRouteDraft> {
+  String? _radio;
+
   @override
-  MeshCoreTraceRouteDraft build() => const MeshCoreTraceRouteDraft();
+  MeshCoreTraceRouteDraft build() {
+    // A route is made of one mesh's repeaters: start again when a
+    // different radio connects, but keep it across a reconnect of the same
+    // one (the prefix is empty while disconnected).
+    ref.listen<String>(meshCoreSelfPubKeyPrefixProvider, (_, next) {
+      if (next.isEmpty) return;
+      if (_radio != null && _radio != next) {
+        state = const MeshCoreTraceRouteDraft();
+      }
+      _radio = next;
+    }, fireImmediately: true);
+    return const MeshCoreTraceRouteDraft();
+  }
 
   void add(MeshCoreTraceRouteHop hop) =>
       state = state.copyWith(hops: [...state.hops, hop]);
@@ -172,6 +178,11 @@ class MeshCoreTraceRouteBuilder extends ConsumerWidget {
     final contacts = ref.watch(meshCoreContactsProvider).contacts;
     final haptics = ref.read(hapticServiceProvider);
 
+    void setReturn(bool value) {
+      haptics.trigger(HapticType.selection);
+      notifier.setReturnSameWay(value);
+    }
+
     void addHop(MeshCoreTraceRouteHop hop) {
       haptics.trigger(HapticType.selection);
       notifier.add(hop);
@@ -193,14 +204,34 @@ class MeshCoreTraceRouteBuilder extends ConsumerWidget {
     final typedPrefix = parseMeshCoreTraceHopPrefix(query);
     final offerTyped = typedPrefix != null && repeaters.isEmpty;
 
-    final used = draft.traceBytes;
-    final overLimit = used > kMeshCoreTraceMaxPathBytes;
+    final maxHops = meshCoreRouteTraceMaxHops(
+      hashSize: draft.hashSize,
+      returnSameWay: draft.returnSameWay,
+    );
+    final overLimit = draft.hops.length > maxHops;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // While searching, only the matches show, so they stay above the
-        // keyboard; the route comes back once a hop is added.
+        // While searching, the route shrinks to its one-line sequence so the
+        // matches stay above the keyboard; it comes back once a hop is added.
+        if (query.isNotEmpty && draft.hops.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              0,
+              AppTheme.spacing16,
+              AppTheme.spacing8,
+            ),
+            child: Text(
+              _routeSequence(context, draft, [
+                for (final h in draft.hops) _hopName(context, h, contacts),
+              ]),
+              style: context.bodySmallStyle?.copyWith(
+                color: context.textSecondary,
+              ),
+            ),
+          ),
         if (query.isEmpty) ...[
           Padding(
             padding: _inset,
@@ -249,11 +280,8 @@ class MeshCoreTraceRouteBuilder extends ConsumerWidget {
               ),
               child: Text(
                 overLimit
-                    ? l.meshcoreTraceRouteTooLong(kMeshCoreTraceMaxPathBytes)
-                    : l.meshcoreTraceRouteBytes(
-                        used,
-                        kMeshCoreTraceMaxPathBytes,
-                      ),
+                    ? l.meshcoreTraceRouteTooLong(maxHops)
+                    : l.meshcoreTraceRouteCapacity(draft.hops.length, maxHops),
                 style: context.bodySmallStyle?.copyWith(
                   color: overLimit
                       ? SemanticColors.error
@@ -269,12 +297,11 @@ class MeshCoreTraceRouteBuilder extends ConsumerWidget {
                 ? l.meshcoreTraceRouteReturnOn
                 : l.meshcoreTraceRouteReturnOff,
             crossAxisAlignment: CrossAxisAlignment.start,
+            // The whole row toggles, not only the switch.
+            onTap: () => setReturn(!draft.returnSameWay),
             trailing: ThemedSwitch(
               value: draft.returnSameWay,
-              onChanged: (v) {
-                haptics.trigger(HapticType.selection);
-                notifier.setReturnSameWay(v);
-              },
+              onChanged: setReturn,
             ),
           ),
           const SizedBox(height: AppTheme.spacing16),
@@ -349,23 +376,44 @@ class MeshCoreTraceRouteBuilder extends ConsumerWidget {
   }
 }
 
+String _hopName(
+  BuildContext context,
+  MeshCoreTraceRouteHop hop,
+  List<MeshCoreContact> contacts,
+) {
+  final l = context.l10n;
+  final contact = hop.contact;
+  if (contact != null) {
+    return contact.displayName.isNotEmpty
+        ? contact.displayName
+        : l.meshcoreContactUnknownName;
+  }
+  return meshCoreTraceHopName(hop.key, contacts) ??
+      l.meshcoreTraceRouteUnknownHop;
+}
+
+// The whole journey as sent, starting and ending at the user's radio:
+// "You -> A -> B -> A -> You".
+String _routeSequence(
+  BuildContext context,
+  MeshCoreTraceRouteDraft draft,
+  List<String> names,
+) {
+  final you = context.l10n.meshcoreTraceRouteYou;
+  return [
+    you,
+    ...names,
+    if (draft.returnSameWay && names.length > 1)
+      ...names.sublist(0, names.length - 1).reversed,
+    you,
+  ].join(' \u2192 ');
+}
+
 class _RouteCard extends ConsumerWidget {
   const _RouteCard({required this.draft, required this.contacts});
 
   final MeshCoreTraceRouteDraft draft;
   final List<MeshCoreContact> contacts;
-
-  String _hopName(BuildContext context, MeshCoreTraceRouteHop hop) {
-    final l = context.l10n;
-    final contact = hop.contact;
-    if (contact != null) {
-      return contact.displayName.isNotEmpty
-          ? contact.displayName
-          : l.meshcoreContactUnknownName;
-    }
-    return meshCoreTraceHopName(hop.key, contacts) ??
-        l.meshcoreTraceRouteUnknownHop;
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -374,14 +422,7 @@ class _RouteCard extends ConsumerWidget {
     final haptics = ref.read(hapticServiceProvider);
     final hops = draft.hops;
 
-    final names = [for (final h in hops) _hopName(context, h)];
-    final sequence = [
-      l.meshcoreTraceRouteYou,
-      ...names,
-      if (draft.returnSameWay && names.length > 1)
-        ...names.sublist(0, names.length - 1).reversed,
-      l.meshcoreTraceRouteYou,
-    ];
+    final names = [for (final h in hops) _hopName(context, h, contacts)];
 
     return Container(
       decoration: BoxDecoration(
@@ -429,7 +470,7 @@ class _RouteCard extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(AppTheme.spacing12),
               child: Text(
-                sequence.join(' → '),
+                _routeSequence(context, draft, names),
                 style: context.bodySmallStyle?.copyWith(
                   color: context.textSecondary,
                 ),

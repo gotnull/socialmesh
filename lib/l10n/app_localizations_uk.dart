@@ -11456,7 +11456,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreTraceRouteYou => 'Ви';
 
   @override
-  String get meshcoreTraceRouteReverse => 'Розвернути маршрут';
+  String get meshcoreTraceRouteReverse => 'Зворотний порядок хопів';
 
   @override
   String get meshcoreTraceRouteClear => 'Очистити маршрут';
@@ -11502,7 +11502,7 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String meshcoreTraceRouteBytes(int used, int max) {
+  String meshcoreTraceRouteCapacity(int used, int max) {
     final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
       localeName,
     );
@@ -11512,7 +11512,7 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return '$usedString з $maxString байтів';
+    return '$usedString з $maxString хопів';
   }
 
   @override
@@ -11522,7 +11522,7 @@ class AppLocalizationsUk extends AppLocalizations {
     );
     final String maxString = maxNumberFormat.format(max);
 
-    return 'Перевищено ліміт трасування в $maxString байтів. Приберіть хоп або виберіть менший розмір хешу.';
+    return 'Задовгий маршрут для цього розміру хешу. Максимум хопів: $maxString.';
   }
 
   @override
@@ -11588,7 +11588,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get meshcoreTraceRouteTimeoutNote =>
-      'Відповідь не надійшла. Можливо, ретранслятор на маршруті поза зоною зв\'язку або вимкнений. Іноді допомагає розвернути маршрут.';
+      'Відповідь не надійшла. Можливо, ретранслятор на маршруті поза зоною зв\'язку або вимкнений.';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNoteOneWay =>
+      'Відповідь не надійшла. Можливо, ретранслятор на маршруті поза зоною зв\'язку або вимкнений, або ваша рація не чує останній напряму. Спробуйте хопи у зворотному порядку.';
 
   @override
   String get meshcoreTxPowerLabel => 'Потужність TX';
