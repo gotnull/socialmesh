@@ -4,6 +4,7 @@
 import 'dart:typed_data';
 
 import '../../../models/meshcore_contact.dart';
+import '../protocol/meshcore_messages.dart';
 
 /// A `CMD_SEND_TRACE_PATH` request: the path of hop hashes and the flags
 /// byte whose low two bits give the hash width as `1 << path_sz`.
@@ -49,7 +50,7 @@ MeshCoreTraceRequest? buildMeshCoreTraceRequest({
   }
 
   final traceWidth = hopWidth <= 1 ? 1 : (hopWidth == 2 ? 2 : 4);
-  final flags = traceWidth == 1 ? 0 : (traceWidth == 2 ? 1 : 2);
+  final flags = _flagsForHashSize(traceWidth);
 
   final outbound = <Uint8List>[];
   for (var i = 0; i + hopWidth <= routeBytes.length; i += hopWidth) {
@@ -78,6 +79,76 @@ MeshCoreTraceRequest? buildMeshCoreTraceRequest({
     flags: flags,
   );
 }
+
+/// Hop hash widths a trace can carry, `1 << path_sz` for `path_sz` 0..2.
+const List<int> kMeshCoreTraceHashSizes = [1, 2, 4];
+
+/// Bytes a hand-built route of [hopCount] hops occupies in the trace
+/// request: each hop once, plus the way back without repeating the far
+/// end when [returnSameWay] is set.
+int meshCoreRouteTraceBytes({
+  required int hopCount,
+  required int hashSize,
+  required bool returnSameWay,
+}) {
+  if (hopCount <= 0) return 0;
+  return (returnSameWay ? 2 * hopCount - 1 : hopCount) * hashSize;
+}
+
+/// Builds a trace along a route the user put together by hand: out
+/// through [hops] in order and, when [returnSameWay] is set, back through
+/// the same repeaters in reverse so the answer retraces the route.
+/// Without the return leg the trace ends at the last hop, which the
+/// sending radio must then hear directly.
+///
+/// Every hop must be [hashSize] bytes wide. Returns null for an empty
+/// route, an unsupported width, a hop of the wrong width, or a route
+/// longer than [kMeshCoreTraceMaxPathBytes].
+MeshCoreTraceRequest? buildMeshCoreRouteTraceRequest({
+  required List<Uint8List> hops,
+  required int hashSize,
+  required bool returnSameWay,
+}) {
+  if (hops.isEmpty || !kMeshCoreTraceHashSizes.contains(hashSize)) {
+    return null;
+  }
+  if (hops.any((h) => h.length != hashSize)) return null;
+  final bytes = meshCoreRouteTraceBytes(
+    hopCount: hops.length,
+    hashSize: hashSize,
+    returnSameWay: returnSameWay,
+  );
+  if (bytes > kMeshCoreTraceMaxPathBytes) return null;
+  final sequence = [
+    ...hops,
+    if (returnSameWay) ...hops.sublist(0, hops.length - 1).reversed,
+  ];
+  return MeshCoreTraceRequest(
+    path: Uint8List.fromList([for (final h in sequence) ...h]),
+    flags: _flagsForHashSize(hashSize),
+  );
+}
+
+/// Known repeaters and room servers whose public key starts with [hash],
+/// newest heard first. More than one means the hash is ambiguous at this
+/// width.
+List<MeshCoreContact> meshCoreTraceHopCandidates(
+  List<int> hash,
+  List<MeshCoreContact> contacts,
+) {
+  if (hash.isEmpty) return const [];
+  final matches = [
+    for (final c in contacts)
+      if ((c.isRepeater || c.isRoom) &&
+          c.publicKey.length >= hash.length &&
+          _sameBytes(Uint8List.sublistView(c.publicKey, 0, hash.length), hash))
+        c,
+  ]..sort((a, b) => b.lastSeen.compareTo(a.lastSeen));
+  return matches;
+}
+
+int _flagsForHashSize(int hashSize) =>
+    hashSize == 1 ? 0 : (hashSize == 2 ? 1 : 2);
 
 // The full prefix of the newest heard contact whose key starts with [hop].
 Uint8List? _expandHop(

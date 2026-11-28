@@ -11281,6 +11281,144 @@ class AppLocalizationsEn extends AppLocalizations {
   String get meshcoreTracePathFinalLeg => 'Back to this radio';
 
   @override
+  String get meshcoreTraceModeContact => 'Contact route';
+
+  @override
+  String get meshcoreTraceModeCustom => 'Build a route';
+
+  @override
+  String get meshcoreTraceRouteTitle => 'Route';
+
+  @override
+  String get meshcoreTraceRouteEmpty =>
+      'Tap repeaters below to add them in the order the trace should travel.';
+
+  @override
+  String get meshcoreTraceRouteYou => 'You';
+
+  @override
+  String get meshcoreTraceRouteReverse => 'Reverse route';
+
+  @override
+  String get meshcoreTraceRouteClear => 'Clear route';
+
+  @override
+  String get meshcoreTraceRouteRemoveHop => 'Remove hop';
+
+  @override
+  String get meshcoreTraceRouteUnknownHop => 'Unknown repeater';
+
+  @override
+  String meshcoreTraceRouteAmbiguous(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString repeaters share this prefix',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcoreTraceRouteHopTooShort(int bytes) {
+    final intl.NumberFormat bytesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String bytesString = bytesNumberFormat.format(bytes);
+
+    return 'Needs a $bytesString-byte prefix';
+  }
+
+  @override
+  String meshcoreTraceRouteBytes(int used, int max) {
+    final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String usedString = usedNumberFormat.format(used);
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return '$usedString of $maxString bytes';
+  }
+
+  @override
+  String meshcoreTraceRouteTooLong(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'Over the $maxString-byte trace limit. Remove a hop or use a smaller hash size.';
+  }
+
+  @override
+  String get meshcoreTraceRouteReturnTitle => 'Return the same way';
+
+  @override
+  String get meshcoreTraceRouteReturnOn =>
+      'The trace comes back through the same repeaters in reverse.';
+
+  @override
+  String get meshcoreTraceRouteReturnOff =>
+      'The trace ends at the last repeater, so your radio must hear it directly.';
+
+  @override
+  String get meshcoreTraceRouteHashSize => 'Hop hash size';
+
+  @override
+  String meshcoreTraceRouteHashBytes(int bytes) {
+    final intl.NumberFormat bytesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String bytesString = bytesNumberFormat.format(bytes);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      bytes,
+      locale: localeName,
+      other: '$bytesString bytes',
+      one: '1 byte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreTraceRouteAddTitle => 'Add repeaters';
+
+  @override
+  String meshcoreTraceRouteAddPrefix(String prefix) {
+    return 'Add $prefix by key prefix';
+  }
+
+  @override
+  String get meshcoreTraceRouteNoRepeaters =>
+      'No repeaters or room servers known yet. Type a key prefix in search to add one.';
+
+  @override
+  String get meshcoreTraceRouteSearchHint => 'Repeater or key prefix';
+
+  @override
+  String get meshcoreTraceRouteTracing => 'Tracing your route...';
+
+  @override
+  String get meshcoreTraceRouteResultHeadline => 'Route trace';
+
+  @override
+  String get meshcoreTraceRouteEdit => 'Edit route';
+
+  @override
+  String get meshcoreTraceRouteTraceReversed => 'Trace reversed';
+
+  @override
+  String get meshcoreTraceRouteTraceAgain => 'Trace again';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNote =>
+      'No answer came back. A repeater on the route may be out of range or switched off. Reversing the route sometimes gets through.';
+
+  @override
   String get meshcoreTxPowerLabel => 'TX Power';
 
   @override

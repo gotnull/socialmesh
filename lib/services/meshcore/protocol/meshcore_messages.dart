@@ -741,6 +741,9 @@ class MeshCoreNeighborsResponse {
       'results=${results.length})';
 }
 
+/// Most hop-hash bytes a `CMD_SEND_TRACE_PATH` request may carry.
+const int kMeshCoreTraceMaxPathBytes = 32;
+
 /// D28 Part C: one hop in a parsed `PUSH_CODE_TRACE_DATA` (0x89) response.
 class MeshCoreTraceHop {
   /// The hop's path hash: the first one, two, four or eight bytes of the

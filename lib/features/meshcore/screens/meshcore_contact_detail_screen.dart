@@ -264,7 +264,7 @@ class MeshCoreContactDetailScreen extends ConsumerWidget {
         iconColor: context.accentColor,
         title: l10n.meshcoreTracePathTitle,
         subtitle: l10n.meshcoreContactDetailTracePathSubtitle,
-        onTap: () => showMeshCoreTracePathSheet(context),
+        onTap: () => showMeshCoreTracePathSheet(context, initialContact: c),
       ),
       SettingsTile(
         key: const ValueKey('meshcore-contact-detail-path-override'),

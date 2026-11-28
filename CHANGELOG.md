@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- MeshCore Trace Path can follow a route you build yourself. Choose Build a route, then tap repeaters by name in the order the trace should travel, or type a key prefix for one your radio has not heard. Drag hops to reorder them, reverse the route with one tap, and pick whether the trace comes back the same way. The hop hash can be 1, 2 or 4 bytes, and the sheet counts bytes against the 32-byte trace limit. When several known repeaters share a hop's prefix, the hop says how many. The route stays put between attempts, and a result offers Trace again and Trace reversed.
+
+### Changed
+
+- Trace results name each hop when exactly one known repeater matches it, instead of showing only the hash.
+- Opening Trace Path from a contact's page now selects that contact.
+
 ## [1.86.0] - 2026-11-28
 
 ### Added

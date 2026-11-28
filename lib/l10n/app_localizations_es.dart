@@ -11469,6 +11469,150 @@ class AppLocalizationsEs extends AppLocalizations {
   String get meshcoreTracePathFinalLeg => 'De vuelta a esta radio';
 
   @override
+  String get meshcoreTraceModeContact => 'Ruta del contacto';
+
+  @override
+  String get meshcoreTraceModeCustom => 'Crear una ruta';
+
+  @override
+  String get meshcoreTraceRouteTitle => 'Ruta';
+
+  @override
+  String get meshcoreTraceRouteEmpty =>
+      'Toca los repetidores de abajo para añadirlos en el orden en que debe viajar el trazado.';
+
+  @override
+  String get meshcoreTraceRouteYou => 'Tú';
+
+  @override
+  String get meshcoreTraceRouteReverse => 'Invertir ruta';
+
+  @override
+  String get meshcoreTraceRouteClear => 'Borrar ruta';
+
+  @override
+  String get meshcoreTraceRouteRemoveHop => 'Quitar salto';
+
+  @override
+  String get meshcoreTraceRouteUnknownHop => 'Repetidor desconocido';
+
+  @override
+  String meshcoreTraceRouteAmbiguous(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString repetidores comparten este prefijo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcoreTraceRouteHopTooShort(int bytes) {
+    final intl.NumberFormat bytesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String bytesString = bytesNumberFormat.format(bytes);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      bytes,
+      locale: localeName,
+      other: 'Necesita un prefijo de $bytesString bytes',
+      one: 'Necesita un prefijo de 1 byte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcoreTraceRouteBytes(int used, int max) {
+    final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String usedString = usedNumberFormat.format(used);
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return '$usedString de $maxString bytes';
+  }
+
+  @override
+  String meshcoreTraceRouteTooLong(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'Supera el límite de $maxString bytes del trazado. Quita un salto o usa un tamaño de hash menor.';
+  }
+
+  @override
+  String get meshcoreTraceRouteReturnTitle => 'Volver por el mismo camino';
+
+  @override
+  String get meshcoreTraceRouteReturnOn =>
+      'El trazado vuelve por los mismos repetidores en orden inverso.';
+
+  @override
+  String get meshcoreTraceRouteReturnOff =>
+      'El trazado termina en el último repetidor, así que tu radio debe oírlo directamente.';
+
+  @override
+  String get meshcoreTraceRouteHashSize => 'Tamaño del hash por salto';
+
+  @override
+  String meshcoreTraceRouteHashBytes(int bytes) {
+    final intl.NumberFormat bytesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String bytesString = bytesNumberFormat.format(bytes);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      bytes,
+      locale: localeName,
+      other: '$bytesString bytes',
+      one: '1 byte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreTraceRouteAddTitle => 'Añadir repetidores';
+
+  @override
+  String meshcoreTraceRouteAddPrefix(String prefix) {
+    return 'Añadir $prefix por prefijo de clave';
+  }
+
+  @override
+  String get meshcoreTraceRouteNoRepeaters =>
+      'Aún no se conoce ningún repetidor ni servidor de sala. Escribe un prefijo de clave en la búsqueda para añadir uno.';
+
+  @override
+  String get meshcoreTraceRouteSearchHint => 'Repetidor o prefijo de clave';
+
+  @override
+  String get meshcoreTraceRouteTracing => 'Trazando tu ruta...';
+
+  @override
+  String get meshcoreTraceRouteResultHeadline => 'Trazado de ruta';
+
+  @override
+  String get meshcoreTraceRouteEdit => 'Editar ruta';
+
+  @override
+  String get meshcoreTraceRouteTraceReversed => 'Trazar al revés';
+
+  @override
+  String get meshcoreTraceRouteTraceAgain => 'Trazar de nuevo';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNote =>
+      'No llegó respuesta. Puede que un repetidor de la ruta esté fuera de alcance o apagado. A veces la ruta invertida sí llega.';
+
+  @override
   String get meshcoreTxPowerLabel => 'Potencia TX';
 
   @override

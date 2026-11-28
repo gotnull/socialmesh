@@ -11440,6 +11440,157 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreTracePathFinalLeg => 'Назад до цієї рації';
 
   @override
+  String get meshcoreTraceModeContact => 'Маршрут контакту';
+
+  @override
+  String get meshcoreTraceModeCustom => 'Скласти маршрут';
+
+  @override
+  String get meshcoreTraceRouteTitle => 'Маршрут';
+
+  @override
+  String get meshcoreTraceRouteEmpty =>
+      'Торкайтеся ретрансляторів нижче, щоб додати їх у тому порядку, в якому має пройти трасування.';
+
+  @override
+  String get meshcoreTraceRouteYou => 'Ви';
+
+  @override
+  String get meshcoreTraceRouteReverse => 'Розвернути маршрут';
+
+  @override
+  String get meshcoreTraceRouteClear => 'Очистити маршрут';
+
+  @override
+  String get meshcoreTraceRouteRemoveHop => 'Прибрати хоп';
+
+  @override
+  String get meshcoreTraceRouteUnknownHop => 'Невідомий ретранслятор';
+
+  @override
+  String meshcoreTraceRouteAmbiguous(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString ретранслятора використовують цей префікс',
+      many: '$countString ретрансляторів використовують цей префікс',
+      few: '$countString ретранслятори використовують цей префікс',
+      one: '$countString ретранслятор використовує цей префікс',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcoreTraceRouteHopTooShort(int bytes) {
+    final intl.NumberFormat bytesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String bytesString = bytesNumberFormat.format(bytes);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      bytes,
+      locale: localeName,
+      other: 'Потрібен префікс з $bytesString байта',
+      many: 'Потрібен префікс з $bytesString байтів',
+      few: 'Потрібен префікс з $bytesString байтів',
+      one: 'Потрібен префікс з $bytesString байта',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String meshcoreTraceRouteBytes(int used, int max) {
+    final intl.NumberFormat usedNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String usedString = usedNumberFormat.format(used);
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return '$usedString з $maxString байтів';
+  }
+
+  @override
+  String meshcoreTraceRouteTooLong(int max) {
+    final intl.NumberFormat maxNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String maxString = maxNumberFormat.format(max);
+
+    return 'Перевищено ліміт трасування в $maxString байтів. Приберіть хоп або виберіть менший розмір хешу.';
+  }
+
+  @override
+  String get meshcoreTraceRouteReturnTitle => 'Повернутися тим самим шляхом';
+
+  @override
+  String get meshcoreTraceRouteReturnOn =>
+      'Трасування повернеться через ті самі ретранслятори у зворотному порядку.';
+
+  @override
+  String get meshcoreTraceRouteReturnOff =>
+      'Трасування закінчиться на останньому ретрансляторі, тож ваша рація має чути його напряму.';
+
+  @override
+  String get meshcoreTraceRouteHashSize => 'Розмір хешу хопа';
+
+  @override
+  String meshcoreTraceRouteHashBytes(int bytes) {
+    final intl.NumberFormat bytesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String bytesString = bytesNumberFormat.format(bytes);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      bytes,
+      locale: localeName,
+      other: '$bytesString байта',
+      many: '$bytesString байтів',
+      few: '$bytesString байти',
+      one: '$bytesString байт',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get meshcoreTraceRouteAddTitle => 'Додати ретранслятори';
+
+  @override
+  String meshcoreTraceRouteAddPrefix(String prefix) {
+    return 'Додати $prefix за префіксом ключа';
+  }
+
+  @override
+  String get meshcoreTraceRouteNoRepeaters =>
+      'Поки не відомо жодного ретранслятора чи сервера кімнати. Введіть префікс ключа в пошуку, щоб додати його.';
+
+  @override
+  String get meshcoreTraceRouteSearchHint => 'Ретранслятор або префікс ключа';
+
+  @override
+  String get meshcoreTraceRouteTracing => 'Трасування маршруту...';
+
+  @override
+  String get meshcoreTraceRouteResultHeadline => 'Трасування маршруту';
+
+  @override
+  String get meshcoreTraceRouteEdit => 'Змінити маршрут';
+
+  @override
+  String get meshcoreTraceRouteTraceReversed => 'Трасувати навпаки';
+
+  @override
+  String get meshcoreTraceRouteTraceAgain => 'Повторити трасування';
+
+  @override
+  String get meshcoreTraceRouteTimeoutNote =>
+      'Відповідь не надійшла. Можливо, ретранслятор на маршруті поза зоною зв\'язку або вимкнений. Іноді допомагає розвернути маршрут.';
+
+  @override
   String get meshcoreTxPowerLabel => 'Потужність TX';
 
   @override

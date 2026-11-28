@@ -45,6 +45,8 @@ import 'meshcore_ble_debug_log_screen.dart';
 import 'meshcore_transport_status_screen.dart';
 import '../widgets/meshcore_chat_traffic_card.dart';
 import '../widgets/meshcore_radio_stats_card.dart';
+import '../widgets/meshcore_trace_route_builder.dart';
+import '../../../services/haptic_service.dart';
 import 'meshcore_discovery_screen.dart';
 import 'meshcore_frame_log_screen.dart';
 
@@ -913,16 +915,21 @@ class _MeshCoreToolsScreenState extends ConsumerState<MeshCoreToolsScreen>
 }
 
 /// D28 Part C / D34c-A: top-level launcher for the Trace Path bottom
-/// sheet, callable from the Tools tile, the Contact Detail screen, or
-/// any future per-contact entry point.
-Future<void> showMeshCoreTracePathSheet(BuildContext context) {
+/// sheet, callable from the Tools tile or the Contact Detail screen, which
+/// passes its contact as [initialContact].
+Future<void> showMeshCoreTracePathSheet(
+  BuildContext context, {
+  MeshCoreContact? initialContact,
+}) {
   return AppBottomSheet.showScrollable<void>(
     context: context,
     initialChildSize: 0.85,
     minChildSize: 0.5,
     maxChildSize: 0.95,
-    builder: (scrollController) =>
-        MeshCoreTracePathSheet(scrollController: scrollController),
+    builder: (scrollController) => MeshCoreTracePathSheet(
+      scrollController: scrollController,
+      initialContact: initialContact,
+    ),
   );
 }
 
@@ -1096,14 +1103,22 @@ class _QueueStatusCard extends ConsumerWidget {
 
 /// D28 Part C: Trace Path picker + result bottom sheet.
 ///
-/// Two phases inside one sheet:
-/// 1. Picker - user taps a contact (chat or repeater). Sheet locks the
-///    target and fires `session.sendTracePath(...)`.
-/// 2. Result - once the firmware push arrives (or times out), the sheet
-///    swaps to a hop list with per-hop SNR.
+/// Two modes: trace a contact along its own route there and back, or
+/// build a route by hand from repeaters ([MeshCoreTraceRouteBuilder]).
+/// Either way the sheet sends `session.sendTracePath(...)` and, once the
+/// firmware push arrives (or times out), swaps to a hop list with per-hop
+/// SNR.
 class MeshCoreTracePathSheet extends ConsumerStatefulWidget {
   final ScrollController scrollController;
-  const MeshCoreTracePathSheet({super.key, required this.scrollController});
+
+  /// Preselected contact, from the Contact Detail entry point.
+  final MeshCoreContact? initialContact;
+
+  const MeshCoreTracePathSheet({
+    super.key,
+    required this.scrollController,
+    this.initialContact,
+  });
 
   @override
   ConsumerState<MeshCoreTracePathSheet> createState() =>
@@ -1113,7 +1128,8 @@ class MeshCoreTracePathSheet extends ConsumerStatefulWidget {
 class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
     with LifecycleSafeMixin<MeshCoreTracePathSheet> {
   MeshCoreContact? _selected;
-  MeshCoreContact? _running;
+  late bool _customRoute;
+  bool _tracing = false;
   MeshCoreTraceResult? _result;
   bool _failed = false;
   bool _timedOut = false;
@@ -1121,29 +1137,66 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
   String _searchQuery = '';
 
   @override
+  void initState() {
+    super.initState();
+    _selected = widget.initialContact;
+    // Reopening from Tools with a route still built goes back to it.
+    _customRoute =
+        widget.initialContact == null &&
+        ref.read(meshCoreTraceRouteProvider).hops.isNotEmpty;
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _runTrace() async {
-    final target = _selected;
-    if (target == null) return;
+  void _setMode(bool customRoute) {
+    ref.read(hapticServiceProvider).trigger(HapticType.selection);
+    _searchController.clear();
     safeSetState(() {
-      _running = target;
+      _customRoute = customRoute;
+      _searchQuery = '';
+    });
+  }
+
+  void _clearSearchAfterAdd() {
+    FocusScope.of(context).unfocus();
+    _searchController.clear();
+    safeSetState(() => _searchQuery = '');
+  }
+
+  void _reverseAndTrace() {
+    ref.read(hapticServiceProvider).trigger(HapticType.light);
+    ref.read(meshCoreTraceRouteProvider.notifier).reverse();
+    _runTrace();
+  }
+
+  Future<void> _runTrace() async {
+    final MeshCoreTraceRequest? request;
+    if (_customRoute) {
+      request = ref.read(meshCoreTraceRouteProvider).request;
+      if (request == null) return;
+    } else {
+      final target = _selected;
+      if (target == null) return;
+      request = buildMeshCoreTraceRequest(
+        target: target,
+        contacts: ref.read(meshCoreContactsProvider).contacts,
+      );
+    }
+    safeSetState(() {
+      _tracing = true;
       _result = null;
       _failed = false;
       _timedOut = false;
     });
     final session = ref.read(meshCoreSessionProvider);
-    final request = buildMeshCoreTraceRequest(
-      target: target,
-      contacts: ref.read(meshCoreContactsProvider).contacts,
-    );
     if (session == null || request == null) {
       safeSetState(() {
         _failed = true;
-        _running = null;
+        _tracing = false;
       });
       return;
     }
@@ -1158,19 +1211,20 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
       if (result == null) {
         safeSetState(() {
           _timedOut = true;
-          _running = null;
+          _tracing = false;
         });
       } else {
         safeSetState(() {
           _result = result;
-          _running = null;
+          _tracing = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      AppLogging.meshcore('event=trace.send_failed error=$e', error: true);
       if (!mounted) return;
       safeSetState(() {
         _failed = true;
-        _running = null;
+        _tracing = false;
       });
     }
   }
@@ -1181,6 +1235,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
     final contactsState = ref.watch(meshCoreContactsProvider);
     // Filter to actionable trace targets - chat + repeater. Sensors
     // and rooms aren't useful trace destinations.
+    final route = ref.watch(meshCoreTraceRouteProvider);
     final query = _searchQuery.trim().toLowerCase();
     final eligible = contactsState.contacts
         .where((c) => c.isChat || c.isRepeater)
@@ -1191,8 +1246,12 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               c.publicKeyHex.startsWith(query),
         )
         .toList(growable: false);
-    final picking =
-        _result == null && _running == null && !_failed && !_timedOut;
+    final picking = _result == null && !_tracing && !_failed && !_timedOut;
+    final canRun = _customRoute ? route.request != null : _selected != null;
+    // The route builder insets its own rows (some carry their own margin).
+    final listPadding = picking && _customRoute
+        ? const EdgeInsets.symmetric(vertical: AppTheme.spacing16)
+        : const EdgeInsets.all(AppTheme.spacing16);
 
     // Sheet shell is `context.background` globally (see
     // `AppBottomSheet`); contact row cards (`context.card`, lighter)
@@ -1225,22 +1284,51 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
           ),
         ),
         const Divider(height: 1),
-        if (picking)
+        if (picking) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacing16,
+              AppTheme.spacing12,
+              AppTheme.spacing16,
+              0,
+            ),
+            child: ChipSelector<bool>(
+              value: _customRoute,
+              options: [
+                ChipOption(
+                  value: false,
+                  label: l.meshcoreTraceModeContact,
+                  icon: Icons.person_rounded,
+                  color: context.accentColor,
+                ),
+                ChipOption(
+                  value: true,
+                  label: l.meshcoreTraceModeCustom,
+                  icon: Icons.alt_route_rounded,
+                  color: context.accentColor,
+                ),
+              ],
+              onChanged: _setMode,
+            ),
+          ),
           SearchFilterHeader(
             searchController: _searchController,
             searchQuery: _searchQuery,
             onSearchChanged: (v) => safeSetState(() => _searchQuery = v),
-            hintText: l.meshcoreSearchContactsHint,
+            hintText: _customRoute
+                ? l.meshcoreTraceRouteSearchHint
+                : l.meshcoreSearchContactsHint,
           ),
+        ],
         Expanded(
           child: ListView(
             controller: widget.scrollController,
-            padding: const EdgeInsets.all(AppTheme.spacing16),
+            padding: listPadding,
             children: [
               if (_result != null)
                 _buildResult(context, _result!)
-              else if (_running != null)
-                _buildRunning(context, _running!)
+              else if (_tracing)
+                _buildRunning(context)
               else if (_failed)
                 StatusBanner.error(
                   title: l.meshcoreTracePathFailed,
@@ -1249,14 +1337,57 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               else if (_timedOut)
                 StatusBanner.warning(
                   title: l.meshcoreTracePathTimeout,
-                  subtitle: l.meshcoreTracePathRepeatNote,
+                  subtitle: _customRoute
+                      ? l.meshcoreTraceRouteTimeoutNote
+                      : l.meshcoreTracePathRepeatNote,
                   icon: Icons.hourglass_empty_rounded,
+                )
+              else if (_customRoute)
+                MeshCoreTraceRouteBuilder(
+                  searchQuery: _searchQuery,
+                  onHopAdded: _clearSearchAfterAdd,
                 )
               else
                 _buildPicker(context, eligible),
             ],
           ),
         ),
+        if (_result != null && _customRoute)
+          BottomActionBar(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => safeSetState(() => _result = null),
+                        icon: const Icon(Icons.edit_rounded),
+                        label: Text(l.meshcoreTraceRouteEdit),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spacing12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: route.hops.length < 2
+                            ? null
+                            : _reverseAndTrace,
+                        icon: const Icon(Icons.swap_vert_rounded),
+                        label: Text(l.meshcoreTraceRouteTraceReversed),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing8),
+                PrimaryGradientButton(
+                  label: l.meshcoreTraceRouteTraceAgain,
+                  icon: Icons.refresh_rounded,
+                  enabled: route.request != null,
+                  onPressed: _runTrace,
+                ),
+              ],
+            ),
+          ),
         if (_failed || _timedOut)
           BottomActionBar(
             child: Row(
@@ -1292,7 +1423,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               child: PrimaryGradientButton(
                 label: l.meshcoreTracePathRunButton,
                 icon: Icons.play_arrow_rounded,
-                enabled: _selected != null,
+                enabled: canRun,
                 onPressed: _runTrace,
               ),
             ),
@@ -1334,7 +1465,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               // The row's own Material carries the fill, so the ListTile's
               // tap splash shows on it.
               child: Material(
-                color: identical(_selected, c)
+                color: _selected?.publicKeyHex == c.publicKeyHex
                     ? context.accentColor.withValues(alpha: 0.15)
                     : context.card,
                 borderRadius: BorderRadius.circular(AppTheme.radius12),
@@ -1345,7 +1476,7 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
                     c.isRepeater
                         ? Icons.cell_tower_rounded
                         : Icons.person_rounded,
-                    color: identical(_selected, c)
+                    color: _selected?.publicKeyHex == c.publicKeyHex
                         ? context.accentColor
                         : context.textSecondary,
                   ),
@@ -1378,10 +1509,11 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
     );
   }
 
-  Widget _buildRunning(BuildContext context, MeshCoreContact target) {
+  Widget _buildRunning(BuildContext context) {
     final l = context.l10n;
-    final name = target.displayName.isNotEmpty
-        ? target.displayName
+    final target = _selected;
+    final name = target?.displayName.isNotEmpty == true
+        ? target!.displayName
         : l.meshcoreContactUnknownName;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppTheme.spacing24),
@@ -1390,7 +1522,9 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
           const CircularProgressIndicator(),
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            l.meshcoreTracePathTracing(name),
+            _customRoute
+                ? l.meshcoreTraceRouteTracing
+                : l.meshcoreTracePathTracing(name),
             style: TextStyle(
               color: context.textSecondary,
               fontFamily: AppTheme.fontFamily,
@@ -1407,11 +1541,14 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
     final name = target?.displayName.isNotEmpty == true
         ? target!.displayName
         : l.meshcoreContactUnknownName;
+    final contacts = ref.read(meshCoreContactsProvider).contacts;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l.meshcoreTracePathResultHeadline(name),
+          _customRoute
+              ? l.meshcoreTraceRouteResultHeadline
+              : l.meshcoreTracePathResultHeadline(name),
           style: TextStyle(
             color: context.textPrimary,
             fontSize: 15,
@@ -1461,13 +1598,9 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
                 ),
                 const SizedBox(width: AppTheme.spacing12),
                 Expanded(
-                  child: Text(
-                    '0x${result.hops[i].hash.map((b) => b.toRadixString(16).padLeft(2, '0')).join().toUpperCase()}',
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: 13,
-                    ),
+                  child: _TraceHopLabel(
+                    hash: result.hops[i].hash,
+                    contacts: contacts,
                   ),
                 ),
                 Text(
@@ -1525,13 +1658,60 @@ class _MeshCoreTracePathSheetState extends ConsumerState<MeshCoreTracePathSheet>
               ],
             ),
           ),
-        const SizedBox(height: AppTheme.spacing16),
-        OutlinedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(l.meshcoreTracePathClose),
+        // A route trace keeps its actions in the bottom bar.
+        if (!_customRoute) ...[
+          const SizedBox(height: AppTheme.spacing16),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(l.meshcoreTracePathClose),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// A trace result hop: the repeater's name when one known repeater has the
+// hash, with the hash beneath; otherwise the hash, and how many known
+// repeaters share it when it is ambiguous.
+class _TraceHopLabel extends StatelessWidget {
+  const _TraceHopLabel({required this.hash, required this.contacts});
+
+  final List<int> hash;
+  final List<MeshCoreContact> contacts;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final matches = meshCoreTraceHopCandidates(hash, contacts);
+    final hex = meshCoreTraceHex(hash);
+    final title = matches.length == 1 ? matches.single.displayName : hex;
+    final String? subtitle;
+    if (matches.length == 1) {
+      subtitle = hex;
+    } else if (matches.length > 1) {
+      subtitle = l.meshcoreTraceRouteAmbiguous(matches.length);
+    } else {
+      subtitle = null;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: context.bodySecondaryStyle?.copyWith(
+            color: context.textPrimary,
+          ),
         ),
+        if (subtitle != null)
+          Text(
+            subtitle,
+            style: context.bodySmallStyle?.copyWith(
+              color: context.textTertiary,
+            ),
+          ),
       ],
     );
   }

@@ -14686,6 +14686,157 @@
   "@meshcoreTracePathFinalLeg": {
     "description": "Trace result sheet: last row, the leg from the final hop back into the connected radio, shown with its SNR."
   },
+  "meshcoreTraceModeContact": "Contact route",
+  "@meshcoreTraceModeContact": {
+    "description": "Trace Path sheet: mode chip that traces a contact's own route there and back."
+  },
+  "meshcoreTraceModeCustom": "Build a route",
+  "@meshcoreTraceModeCustom": {
+    "description": "Trace Path sheet: mode chip for building a route by hand from repeaters."
+  },
+  "meshcoreTraceRouteTitle": "Route",
+  "@meshcoreTraceRouteTitle": {
+    "description": "Trace Path route builder: section title above the hand-built route."
+  },
+  "meshcoreTraceRouteEmpty": "Tap repeaters below to add them in the order the trace should travel.",
+  "@meshcoreTraceRouteEmpty": {
+    "description": "Trace Path route builder: shown while the route has no hops."
+  },
+  "meshcoreTraceRouteYou": "You",
+  "@meshcoreTraceRouteYou": {
+    "description": "Trace Path route builder: the connected radio as the start and end of the route."
+  },
+  "meshcoreTraceRouteReverse": "Reverse route",
+  "@meshcoreTraceRouteReverse": {
+    "description": "Trace Path route builder: tooltip for the button that reverses the hop order."
+  },
+  "meshcoreTraceRouteClear": "Clear route",
+  "@meshcoreTraceRouteClear": {
+    "description": "Trace Path route builder: tooltip for the button that removes every hop."
+  },
+  "meshcoreTraceRouteRemoveHop": "Remove hop",
+  "@meshcoreTraceRouteRemoveHop": {
+    "description": "Trace Path route builder: tooltip for removing one hop."
+  },
+  "meshcoreTraceRouteUnknownHop": "Unknown repeater",
+  "@meshcoreTraceRouteUnknownHop": {
+    "description": "Trace Path: a hop whose key prefix matches no known repeater or room server."
+  },
+  "meshcoreTraceRouteAmbiguous": "{count, plural, other{{count} repeaters share this prefix}}",
+  "@meshcoreTraceRouteAmbiguous": {
+    "description": "Trace Path: warning that several known repeaters start with this hop's key prefix, so the hop is ambiguous.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "meshcoreTraceRouteHopTooShort": "Needs a {bytes}-byte prefix",
+  "@meshcoreTraceRouteHopTooShort": {
+    "description": "Trace Path route builder: a typed hop is shorter than the chosen hop hash size.",
+    "placeholders": {
+      "bytes": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "meshcoreTraceRouteBytes": "{used} of {max} bytes",
+  "@meshcoreTraceRouteBytes": {
+    "description": "Trace Path route builder: bytes the trace request uses out of the firmware limit.",
+    "placeholders": {
+      "used": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "max": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "meshcoreTraceRouteTooLong": "Over the {max}-byte trace limit. Remove a hop or use a smaller hash size.",
+  "@meshcoreTraceRouteTooLong": {
+    "description": "Trace Path route builder: the route is over the firmware trace size limit.",
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "meshcoreTraceRouteReturnTitle": "Return the same way",
+  "@meshcoreTraceRouteReturnTitle": {
+    "description": "Trace Path route builder: toggle that sends the trace back through the same repeaters."
+  },
+  "meshcoreTraceRouteReturnOn": "The trace comes back through the same repeaters in reverse.",
+  "@meshcoreTraceRouteReturnOn": {
+    "description": "Trace Path route builder: subtitle when the return leg is on."
+  },
+  "meshcoreTraceRouteReturnOff": "The trace ends at the last repeater, so your radio must hear it directly.",
+  "@meshcoreTraceRouteReturnOff": {
+    "description": "Trace Path route builder: subtitle when the return leg is off."
+  },
+  "meshcoreTraceRouteHashSize": "Hop hash size",
+  "@meshcoreTraceRouteHashSize": {
+    "description": "Trace Path route builder: section title for the bytes of key prefix used per hop."
+  },
+  "meshcoreTraceRouteHashBytes": "{bytes, plural, =1{1 byte} other{{bytes} bytes}}",
+  "@meshcoreTraceRouteHashBytes": {
+    "description": "Trace Path route builder: hop hash size chip label.",
+    "placeholders": {
+      "bytes": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "meshcoreTraceRouteAddTitle": "Add repeaters",
+  "@meshcoreTraceRouteAddTitle": {
+    "description": "Trace Path route builder: section title above the repeaters that can be added."
+  },
+  "meshcoreTraceRouteAddPrefix": "Add {prefix} by key prefix",
+  "@meshcoreTraceRouteAddPrefix": {
+    "description": "Trace Path route builder: row that adds a typed key prefix as a hop.",
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreTraceRouteNoRepeaters": "No repeaters or room servers known yet. Type a key prefix in search to add one.",
+  "@meshcoreTraceRouteNoRepeaters": {
+    "description": "Trace Path route builder: no repeaters or room servers to pick from."
+  },
+  "meshcoreTraceRouteSearchHint": "Repeater or key prefix",
+  "@meshcoreTraceRouteSearchHint": {
+    "description": "Trace Path route builder: search field hint."
+  },
+  "meshcoreTraceRouteTracing": "Tracing your route...",
+  "@meshcoreTraceRouteTracing": {
+    "description": "Trace Path: status while a hand-built route trace runs."
+  },
+  "meshcoreTraceRouteResultHeadline": "Route trace",
+  "@meshcoreTraceRouteResultHeadline": {
+    "description": "Trace Path: result title for a hand-built route trace."
+  },
+  "meshcoreTraceRouteEdit": "Edit route",
+  "@meshcoreTraceRouteEdit": {
+    "description": "Trace Path: result button that goes back to the route builder."
+  },
+  "meshcoreTraceRouteTraceReversed": "Trace reversed",
+  "@meshcoreTraceRouteTraceReversed": {
+    "description": "Trace Path: result button that reverses the route and runs the trace again."
+  },
+  "meshcoreTraceRouteTraceAgain": "Trace again",
+  "@meshcoreTraceRouteTraceAgain": {
+    "description": "Trace Path: result button that runs the same route trace again."
+  },
+  "meshcoreTraceRouteTimeoutNote": "No answer came back. A repeater on the route may be out of range or switched off. Reversing the route sometimes gets through.",
+  "@meshcoreTraceRouteTimeoutNote": {
+    "description": "Trace Path: note on the timeout banner for a hand-built route."
+  },
   "meshcoreTxPowerLabel": "TX Power",
   "@meshcoreTxPowerLabel": {
     "description": "Info row label for TX power"

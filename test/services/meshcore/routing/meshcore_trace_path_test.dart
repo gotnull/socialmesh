@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:socialmesh/models/meshcore_contact.dart';
 import 'package:socialmesh/services/meshcore/routing/meshcore_trace_path.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
 
 MeshCoreContact _contact(
   int first, {
@@ -109,5 +110,160 @@ void main() {
       contacts: const [],
     )!;
     expect(r.path, [0xC0]);
+  });
+
+  group('hand-built route', () {
+    Uint8List b(List<int> v) => Uint8List.fromList(v);
+
+    test('returns the same way without repeating the far end', () {
+      final r = buildMeshCoreRouteTraceRequest(
+        hops: [
+          b([0xA0]),
+          b([0xB0]),
+          b([0xC0]),
+        ],
+        hashSize: 1,
+        returnSameWay: true,
+      )!;
+      expect(r.path, [0xA0, 0xB0, 0xC0, 0xB0, 0xA0]);
+      expect(r.flags, 0);
+    });
+
+    test('one way is sent exactly as built', () {
+      final r = buildMeshCoreRouteTraceRequest(
+        hops: [
+          b([0xA0]),
+          b([0xB0]),
+          b([0xA0]),
+        ],
+        hashSize: 1,
+        returnSameWay: false,
+      )!;
+      expect(r.path, [0xA0, 0xB0, 0xA0]);
+    });
+
+    test('a single hop returning the same way is that hop alone', () {
+      final r = buildMeshCoreRouteTraceRequest(
+        hops: [
+          b([0xA0]),
+        ],
+        hashSize: 1,
+        returnSameWay: true,
+      )!;
+      expect(r.path, [0xA0]);
+    });
+
+    test('wider hashes set path_sz', () {
+      final two = buildMeshCoreRouteTraceRequest(
+        hops: [
+          b([0xA0, 0xA1]),
+          b([0xB0, 0xB1]),
+        ],
+        hashSize: 2,
+        returnSameWay: true,
+      )!;
+      expect(two.flags, 1);
+      expect(two.path, [0xA0, 0xA1, 0xB0, 0xB1, 0xA0, 0xA1]);
+      final four = buildMeshCoreRouteTraceRequest(
+        hops: [
+          b([1, 2, 3, 4]),
+        ],
+        hashSize: 4,
+        returnSameWay: false,
+      )!;
+      expect(four.flags, 2);
+      expect(four.hashSize, 4);
+    });
+
+    test('rejects an empty route, a bad width or a mismatched hop', () {
+      expect(
+        buildMeshCoreRouteTraceRequest(
+          hops: const [],
+          hashSize: 1,
+          returnSameWay: true,
+        ),
+        isNull,
+      );
+      expect(
+        buildMeshCoreRouteTraceRequest(
+          hops: [
+            b([1, 2, 3]),
+          ],
+          hashSize: 3,
+          returnSameWay: false,
+        ),
+        isNull,
+      );
+      expect(
+        buildMeshCoreRouteTraceRequest(
+          hops: [
+            b([0xA0]),
+            b([0xB0, 0xB1]),
+          ],
+          hashSize: 1,
+          returnSameWay: false,
+        ),
+        isNull,
+      );
+    });
+
+    test('stops at the trace payload limit', () {
+      // 16 one-byte hops there and 15 back is 31 bytes; 17 is 33.
+      List<Uint8List> hops(int n) => [
+        for (var i = 0; i < n; i++) b([i]),
+      ];
+      expect(
+        meshCoreRouteTraceBytes(hopCount: 16, hashSize: 1, returnSameWay: true),
+        31,
+      );
+      expect(
+        buildMeshCoreRouteTraceRequest(
+          hops: hops(16),
+          hashSize: 1,
+          returnSameWay: true,
+        ),
+        isNotNull,
+      );
+      expect(
+        buildMeshCoreRouteTraceRequest(
+          hops: hops(17),
+          hashSize: 1,
+          returnSameWay: true,
+        ),
+        isNull,
+      );
+      expect(
+        buildMeshCoreRouteTraceRequest(
+          hops: hops(kMeshCoreTraceMaxPathBytes),
+          hashSize: 1,
+          returnSameWay: false,
+        ),
+        isNotNull,
+      );
+      expect(
+        meshCoreRouteTraceBytes(hopCount: 0, hashSize: 4, returnSameWay: true),
+        0,
+      );
+    });
+  });
+
+  test('hop candidates are repeaters and rooms, newest first', () {
+    final older = _contact(0xA0);
+    final newer = MeshCoreContact(
+      publicKey: Uint8List.fromList([0xA0, ...List.filled(31, 9)]),
+      name: 'Newer',
+      type: MeshCoreAdvType.room,
+      pathLength: -1,
+      path: Uint8List(0),
+      lastSeen: DateTime(2026, 11, 25),
+    );
+    final chat = _contact(0xA0, type: MeshCoreAdvType.chat);
+    final other = _contact(0xB0);
+    final all = [older, chat, newer, other];
+
+    expect(meshCoreTraceHopCandidates([0xA0], all), [newer, older]);
+    expect(meshCoreTraceHopCandidates([0xA0, 0xA1], all), [older]);
+    expect(meshCoreTraceHopCandidates([0xEE], all), isEmpty);
+    expect(meshCoreTraceHopCandidates(const [], all), isEmpty);
   });
 }

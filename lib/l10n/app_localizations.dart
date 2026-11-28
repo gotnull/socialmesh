@@ -18996,6 +18996,174 @@ abstract class AppLocalizations {
   /// **'Back to this radio'**
   String get meshcoreTracePathFinalLeg;
 
+  /// Trace Path sheet: mode chip that traces a contact's own route there and back.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact route'**
+  String get meshcoreTraceModeContact;
+
+  /// Trace Path sheet: mode chip for building a route by hand from repeaters.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a route'**
+  String get meshcoreTraceModeCustom;
+
+  /// Trace Path route builder: section title above the hand-built route.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get meshcoreTraceRouteTitle;
+
+  /// Trace Path route builder: shown while the route has no hops.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap repeaters below to add them in the order the trace should travel.'**
+  String get meshcoreTraceRouteEmpty;
+
+  /// Trace Path route builder: the connected radio as the start and end of the route.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get meshcoreTraceRouteYou;
+
+  /// Trace Path route builder: tooltip for the button that reverses the hop order.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse route'**
+  String get meshcoreTraceRouteReverse;
+
+  /// Trace Path route builder: tooltip for the button that removes every hop.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear route'**
+  String get meshcoreTraceRouteClear;
+
+  /// Trace Path route builder: tooltip for removing one hop.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove hop'**
+  String get meshcoreTraceRouteRemoveHop;
+
+  /// Trace Path: a hop whose key prefix matches no known repeater or room server.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown repeater'**
+  String get meshcoreTraceRouteUnknownHop;
+
+  /// Trace Path: warning that several known repeaters start with this hop's key prefix, so the hop is ambiguous.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} repeaters share this prefix}}'**
+  String meshcoreTraceRouteAmbiguous(int count);
+
+  /// Trace Path route builder: a typed hop is shorter than the chosen hop hash size.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a {bytes}-byte prefix'**
+  String meshcoreTraceRouteHopTooShort(int bytes);
+
+  /// Trace Path route builder: bytes the trace request uses out of the firmware limit.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {max} bytes'**
+  String meshcoreTraceRouteBytes(int used, int max);
+
+  /// Trace Path route builder: the route is over the firmware trace size limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Over the {max}-byte trace limit. Remove a hop or use a smaller hash size.'**
+  String meshcoreTraceRouteTooLong(int max);
+
+  /// Trace Path route builder: toggle that sends the trace back through the same repeaters.
+  ///
+  /// In en, this message translates to:
+  /// **'Return the same way'**
+  String get meshcoreTraceRouteReturnTitle;
+
+  /// Trace Path route builder: subtitle when the return leg is on.
+  ///
+  /// In en, this message translates to:
+  /// **'The trace comes back through the same repeaters in reverse.'**
+  String get meshcoreTraceRouteReturnOn;
+
+  /// Trace Path route builder: subtitle when the return leg is off.
+  ///
+  /// In en, this message translates to:
+  /// **'The trace ends at the last repeater, so your radio must hear it directly.'**
+  String get meshcoreTraceRouteReturnOff;
+
+  /// Trace Path route builder: section title for the bytes of key prefix used per hop.
+  ///
+  /// In en, this message translates to:
+  /// **'Hop hash size'**
+  String get meshcoreTraceRouteHashSize;
+
+  /// Trace Path route builder: hop hash size chip label.
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes, plural, =1{1 byte} other{{bytes} bytes}}'**
+  String meshcoreTraceRouteHashBytes(int bytes);
+
+  /// Trace Path route builder: section title above the repeaters that can be added.
+  ///
+  /// In en, this message translates to:
+  /// **'Add repeaters'**
+  String get meshcoreTraceRouteAddTitle;
+
+  /// Trace Path route builder: row that adds a typed key prefix as a hop.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {prefix} by key prefix'**
+  String meshcoreTraceRouteAddPrefix(String prefix);
+
+  /// Trace Path route builder: no repeaters or room servers to pick from.
+  ///
+  /// In en, this message translates to:
+  /// **'No repeaters or room servers known yet. Type a key prefix in search to add one.'**
+  String get meshcoreTraceRouteNoRepeaters;
+
+  /// Trace Path route builder: search field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeater or key prefix'**
+  String get meshcoreTraceRouteSearchHint;
+
+  /// Trace Path: status while a hand-built route trace runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracing your route...'**
+  String get meshcoreTraceRouteTracing;
+
+  /// Trace Path: result title for a hand-built route trace.
+  ///
+  /// In en, this message translates to:
+  /// **'Route trace'**
+  String get meshcoreTraceRouteResultHeadline;
+
+  /// Trace Path: result button that goes back to the route builder.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit route'**
+  String get meshcoreTraceRouteEdit;
+
+  /// Trace Path: result button that reverses the route and runs the trace again.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace reversed'**
+  String get meshcoreTraceRouteTraceReversed;
+
+  /// Trace Path: result button that runs the same route trace again.
+  ///
+  /// In en, this message translates to:
+  /// **'Trace again'**
+  String get meshcoreTraceRouteTraceAgain;
+
+  /// Trace Path: note on the timeout banner for a hand-built route.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer came back. A repeater on the route may be out of range or switched off. Reversing the route sometimes gets through.'**
+  String get meshcoreTraceRouteTimeoutNote;
+
   /// Info row label for TX power
   ///
   /// In en, this message translates to:

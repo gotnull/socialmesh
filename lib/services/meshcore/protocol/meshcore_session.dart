@@ -3132,11 +3132,11 @@ class MeshCoreSession {
     if (flag < 0 || flag > 0xFF) {
       throw ArgumentError.value(flag, 'flag', 'must fit in uint8');
     }
-    if (path.length > 32) {
+    if (path.length > kMeshCoreTraceMaxPathBytes) {
       throw ArgumentError.value(
         path.length,
         'path.length',
-        'trace path payload must be at most 32 bytes',
+        'trace path payload must be at most $kMeshCoreTraceMaxPathBytes bytes',
       );
     }
 

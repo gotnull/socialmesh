@@ -12,6 +12,57 @@ import 'package:socialmesh/features/meshcore/screens/meshcore_tools_screen.dart'
 import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/models/meshcore_contact.dart';
 import 'package:socialmesh/providers/meshcore_providers.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_session.dart';
+
+class _NullTransport implements MeshCoreTransport {
+  @override
+  Stream<Uint8List> get rawRxStream => const Stream.empty();
+
+  @override
+  Future<void> sendRaw(Uint8List data) async {}
+
+  @override
+  bool get isConnected => true;
+}
+
+// Answers every trace as if each hop heard it at 6 dB, and records what
+// was sent.
+class _TraceSession extends MeshCoreSession {
+  _TraceSession() : super(_NullTransport());
+
+  final List<List<int>> paths = [];
+  final List<int> flags = [];
+
+  @override
+  bool get isActive => true;
+
+  @override
+  Future<MeshCoreTraceResult?> sendTracePath({
+    required int tag,
+    required Uint8List path,
+    int authCode = 0,
+    int flag = 0,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    paths.add(List.of(path));
+    flags.add(flag);
+    final size = 1 << (flag & 0x03);
+    return MeshCoreTraceResult(
+      tag: tag,
+      flag: flag,
+      authCode: authCode,
+      hops: [
+        for (var i = 0; i + size <= path.length; i += size)
+          MeshCoreTraceHop(
+            hash: Uint8List.fromList(path.sublist(i, i + size)),
+            snrQuarter: 24,
+          ),
+      ],
+      finalSnrQuarter: 20,
+    );
+  }
+}
 
 MeshCoreContact _contact(String name, int first, int type) => MeshCoreContact(
   publicKey: Uint8List.fromList(List.generate(32, (i) => (first + i) & 0xFF)),
@@ -34,20 +85,45 @@ class _Roster extends MeshCoreContactsNotifier {
   );
 }
 
-Widget _wrap() => ProviderScope(
-  overrides: [
-    meshCoreSessionProvider.overrideWithValue(null),
-    meshCoreContactsProvider.overrideWith(_Roster.new),
-  ],
-  child: MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    theme: ThemeData.dark(),
-    home: Material(
-      child: MeshCoreTracePathSheet(scrollController: ScrollController()),
-    ),
-  ),
-);
+Widget _wrap({MeshCoreSession? session, MeshCoreContact? initialContact}) =>
+    ProviderScope(
+      overrides: [
+        meshCoreSessionProvider.overrideWithValue(session),
+        meshCoreContactsProvider.overrideWith(_Roster.new),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: ThemeData.dark(),
+        home: Material(
+          child: MeshCoreTracePathSheet(
+            scrollController: ScrollController(),
+            initialContact: initialContact,
+          ),
+        ),
+      ),
+    );
+
+void _tallScreen(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+}
+
+AppLocalizations _l10n(WidgetTester tester) =>
+    AppLocalizations.of(tester.element(find.byType(MeshCoreTracePathSheet)));
+
+Future<void> _tap(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  await tester.tap(finder);
+  await tester.pump();
+}
+
+PrimaryGradientButton _primary(WidgetTester tester) =>
+    tester.widget<PrimaryGradientButton>(find.byType(PrimaryGradientButton));
+
+const _arrow = ' \u2192 ';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
@@ -124,5 +200,153 @@ void main() {
     expect(find.bySemanticsLabel(RegExp(r'^TerryDev2')), findsOneWidget);
     expect(find.bySemanticsLabel(RegExp(r'^Coburg Hill')), findsOneWidget);
     semantics.dispose();
+  });
+
+  group('build a route', () {
+    testWidgets('repeaters are added by name and traced there and back', (
+      tester,
+    ) async {
+      _tallScreen(tester);
+      final session = _TraceSession();
+      await tester.pumpWidget(_wrap(session: session));
+      await tester.pump();
+      final l = _l10n(tester);
+
+      await _tap(tester, find.text(l.meshcoreTraceModeCustom));
+      expect(find.text(l.meshcoreTraceRouteEmpty), findsOneWidget);
+      // Chat contacts cannot carry a trace, so only repeaters are offered.
+      expect(find.text('TerryDev2'), findsNothing);
+      expect(_primary(tester).enabled, isFalse);
+
+      await _tap(tester, find.text('Coburg Hill'));
+      await _tap(tester, find.text('Bendigo Relay').last);
+
+      final you = l.meshcoreTraceRouteYou;
+      expect(
+        find.text(
+          [
+            you,
+            'Coburg Hill',
+            'Bendigo Relay',
+            'Coburg Hill',
+            you,
+          ].join(_arrow),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(l.meshcoreTraceRouteBytes(3, kMeshCoreTraceMaxPathBytes)),
+        findsOneWidget,
+      );
+      expect(_primary(tester).enabled, isTrue);
+
+      await _tap(tester, find.text(l.meshcoreTracePathRunButton));
+      expect(session.paths.single, [0x30, 0x40, 0x30]);
+      expect(session.flags.single, 0);
+      expect(find.text(l.meshcoreTraceRouteResultHeadline), findsOneWidget);
+      // Hops are named, not shown as bare hashes.
+      expect(find.text('Coburg Hill'), findsNWidgets(2));
+      expect(find.text('Bendigo Relay'), findsOneWidget);
+
+      await _tap(tester, find.text(l.meshcoreTraceRouteTraceReversed));
+      expect(session.paths.last, [0x40, 0x30, 0x40]);
+
+      await _tap(tester, find.text(l.meshcoreTraceRouteEdit));
+      expect(
+        find.text(
+          [
+            you,
+            'Bendigo Relay',
+            'Coburg Hill',
+            'Bendigo Relay',
+            you,
+          ].join(_arrow),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('one way, reversed and trimmed', (tester) async {
+      _tallScreen(tester);
+      final session = _TraceSession();
+      await tester.pumpWidget(_wrap(session: session));
+      await tester.pump();
+      final l = _l10n(tester);
+
+      await _tap(tester, find.text(l.meshcoreTraceModeCustom));
+      await _tap(tester, find.text('Coburg Hill'));
+      await _tap(tester, find.text('Bendigo Relay').last);
+      await _tap(tester, find.byType(Switch).first);
+      expect(find.text(l.meshcoreTraceRouteReturnOff), findsOneWidget);
+
+      await _tap(tester, find.byTooltip(l.meshcoreTraceRouteReverse));
+      final you = l.meshcoreTraceRouteYou;
+      expect(
+        find.text([you, 'Bendigo Relay', 'Coburg Hill', you].join(_arrow)),
+        findsOneWidget,
+      );
+
+      await _tap(tester, find.text(l.meshcoreTracePathRunButton));
+      expect(session.paths.single, [0x40, 0x30]);
+
+      await _tap(tester, find.text(l.meshcoreTraceRouteEdit));
+      await _tap(tester, find.byTooltip(l.meshcoreTraceRouteRemoveHop).first);
+      expect(find.text([you, 'Coburg Hill', you].join(_arrow)), findsOneWidget);
+      await _tap(tester, find.byTooltip(l.meshcoreTraceRouteClear));
+      expect(find.text(l.meshcoreTraceRouteEmpty), findsOneWidget);
+    });
+
+    testWidgets('an unknown repeater is added by key prefix', (tester) async {
+      _tallScreen(tester);
+      final session = _TraceSession();
+      await tester.pumpWidget(_wrap(session: session));
+      await tester.pump();
+      final l = _l10n(tester);
+
+      await _tap(tester, find.text(l.meshcoreTraceModeCustom));
+      await tester.enterText(find.byType(TextField), 'ee');
+      await tester.pump();
+      // Searching shows only the matches, so they stay above the keyboard.
+      expect(find.text(l.meshcoreTraceRouteReturnTitle), findsNothing);
+      await _tap(tester, find.text(l.meshcoreTraceRouteAddPrefix('EE')));
+      expect(find.text(l.meshcoreTraceRouteUnknownHop), findsOneWidget);
+      expect(find.text(l.meshcoreTraceRouteReturnTitle), findsOneWidget);
+      expect(_primary(tester).enabled, isTrue);
+
+      // A one-byte prefix cannot fill a two-byte hop hash.
+      await _tap(tester, find.text(l.meshcoreTraceRouteHashBytes(2)));
+      expect(find.text(l.meshcoreTraceRouteHopTooShort(2)), findsOneWidget);
+      expect(_primary(tester).enabled, isFalse);
+
+      await _tap(tester, find.text(l.meshcoreTraceRouteHashBytes(1)));
+      await _tap(tester, find.text(l.meshcoreTracePathRunButton));
+      expect(session.paths.single, [0xEE]);
+    });
+
+    testWidgets('wider hashes take more of the key and set path_sz', (
+      tester,
+    ) async {
+      _tallScreen(tester);
+      final session = _TraceSession();
+      await tester.pumpWidget(_wrap(session: session));
+      await tester.pump();
+      final l = _l10n(tester);
+
+      await _tap(tester, find.text(l.meshcoreTraceModeCustom));
+      await _tap(tester, find.text(l.meshcoreTraceRouteHashBytes(2)));
+      await _tap(tester, find.text('Coburg Hill'));
+      await _tap(tester, find.text(l.meshcoreTracePathRunButton));
+      expect(session.paths.single, [0x30, 0x31]);
+      expect(session.flags.single, 1);
+    });
+  });
+
+  testWidgets('opening from a contact preselects it', (tester) async {
+    _tallScreen(tester);
+    final contact = _contact('Coburg Hill', 0x30, MeshCoreAdvType.repeater);
+    await tester.pumpWidget(_wrap(initialContact: contact));
+    await tester.pump();
+
+    expect(_primary(tester).enabled, isTrue);
   });
 }
