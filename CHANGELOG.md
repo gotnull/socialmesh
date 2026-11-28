@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Saving a MeshCore repeater's frequency, bandwidth, spreading factor or coding rate from its admin settings now works. The app sent the four values separated by spaces, which repeater firmware rejects because it expects commas.
+- The repeater admin setting to sync the repeater's clock on login now does so. Logging in as admin to a repeater with it on sends the phone's time, which the repeater accepts only if it moves its clock forward. The setting was saved but never used.
 - Repeater admin settings no longer count a setting as saved when the repeater refused it. The summary now quotes the repeater's reply, and after a radio change it says the change takes effect when the repeater reboots.
 
 ## [1.86.0] - 2026-11-28

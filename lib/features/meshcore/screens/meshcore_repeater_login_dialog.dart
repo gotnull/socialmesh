@@ -17,11 +17,15 @@
 // `flutter_secure_storage` per-contact persistence is a separate
 // slice with its own UX review.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/logging.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
@@ -29,6 +33,8 @@ import '../../../core/widgets/primary_gradient_button.dart';
 import '../../../models/meshcore_contact.dart';
 import '../../../providers/meshcore_providers.dart';
 import '../../../services/meshcore/protocol/meshcore_messages.dart';
+import '../../../services/meshcore/protocol/meshcore_session.dart';
+import '../../../services/meshcore/storage/meshcore_admin_auto_clock_sync_store.dart';
 import '../../../utils/snackbar.dart';
 import 'meshcore_repeater_hub_screen.dart';
 
@@ -81,6 +87,37 @@ Future<bool> showMeshCoreRepeaterLoginDialog(
   return true;
 }
 
+/// Sends `clock sync` to [contact] after an admin login when its auto
+/// clock sync setting is on, as the admin settings screen describes. The
+/// firmware sets its clock to the command's timestamp, and only forward.
+/// Runs on after the login sheet closes, so the outcome is only logged.
+Future<void> syncMeshCoreRepeaterClockAfterLogin(
+  MeshCoreSession session,
+  MeshCoreContact contact,
+) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final store = MeshCoreAdminAutoClockSyncStore(prefs);
+    if (!store.isEnabled(contact.publicKeyHex)) return;
+    final result = await session.sendCliCommand(
+      pubKey: contact.publicKey,
+      command: 'clock sync', // lint-allow: hardcoded-string
+      // The admin screens number their tokens up from 00|; this one stays
+      // clear of them while its reply is outstanding.
+      prefixToken: 'FF|', // lint-allow: hardcoded-string
+    );
+    AppLogging.meshcore(
+      'event=repeater_admin.clock_sync outcome=${result.outcome.name} '
+      'reply=${result.response ?? ''}',
+    );
+  } catch (e) {
+    AppLogging.meshcore(
+      'event=repeater_admin.clock_sync_failed error=$e',
+      error: true,
+    );
+  }
+}
+
 // D49-D2: tuple carrying the firmware's login outcome PLUS the
 // password the user typed in. The wrapper above forwards the
 // password into the hub; nothing else reads it.
@@ -129,6 +166,9 @@ class _MeshCoreRepeaterLoginSheetState
       pubKey: widget.contact.publicKey,
       password: password,
     );
+    if (result.delivered && result.isAdmin) {
+      unawaited(syncMeshCoreRepeaterClockAfterLogin(session, widget.contact));
+    }
     if (!mounted) return;
     navigator.pop(_LoginSheetResult(result: result, password: password));
   }
