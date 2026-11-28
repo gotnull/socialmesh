@@ -10713,6 +10713,8 @@
   "meshcoreRepeaterAdminSettingsSaveFailedSnackbar": "Не вдалося зберегти налаштування: {error}.",
   "meshcoreRepeaterAdminSettingsSavedSnackbar": "Збережено {saved} з {total} налаштувань.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Збережено {saved} з {total} налаштувань. Деякі команди завершилися тайм-аутом - сесія адміна могла закінчитися.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "Збережено {saved} з {total} налаштувань. Відповідь ретранслятора: {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "Збережено {saved} з {total} налаштувань. Зміни радіо наберуть чинності після перезавантаження ретранслятора.",
   "meshcoreRepeaterAdminSettingsSectionAdvertisement": "Реклама",
   "meshcoreRepeaterAdminSettingsSectionBehavior": "Поведінка ретранслятора",
   "meshcoreRepeaterAdminSettingsSectionIdentity": "Ідентичність",

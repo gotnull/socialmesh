@@ -10705,6 +10705,8 @@
   "meshcoreRepeaterAdminSettingsSaveFailedSnackbar": "Impossible d'enregistrer les paramètres : {error}.",
   "meshcoreRepeaterAdminSettingsSavedSnackbar": "{saved} paramètres sur {total} enregistrés.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "{saved} paramètres sur {total} enregistrés. Certaines commandes ont expiré ; la session admin est peut-être terminée.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "{saved} paramètres sur {total} enregistrés. Le répéteur a répondu : {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "{saved} paramètres sur {total} enregistrés. Les changements radio prennent effet au redémarrage du répéteur.",
   "meshcoreRepeaterAdminSettingsSectionAdvertisement": "Annonce",
   "meshcoreRepeaterAdminSettingsSectionBehavior": "Comportement du répéteur",
   "meshcoreRepeaterAdminSettingsSectionIdentity": "Identité",

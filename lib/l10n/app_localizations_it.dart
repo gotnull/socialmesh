@@ -7827,6 +7827,37 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String meshcoreRepeaterAdminSettingsRejectedSnackbar(
+    int saved,
+    int total,
+    String reply,
+  ) {
+    final intl.NumberFormat savedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String savedString = savedNumberFormat.format(saved);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Salvate $savedString di $totalString impostazioni. Il ripetitore ha risposto: $reply';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedRebootSnackbar(
+    int saved,
+    int total,
+  ) {
+    final intl.NumberFormat savedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String savedString = savedNumberFormat.format(saved);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Salvate $savedString di $totalString impostazioni. Le modifiche radio hanno effetto dopo il riavvio del ripetitore.';
+  }
+
+  @override
   String get meshcoreRepeaterAdminSettingsSectionRadio => 'Radio';
 
   @override

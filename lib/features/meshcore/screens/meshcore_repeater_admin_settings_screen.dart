@@ -29,6 +29,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/logging.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/safety/lifecycle_mixin.dart';
 import '../../../core/theme.dart';
@@ -557,7 +558,8 @@ class _MeshCoreRepeaterAdminSettingsScreenState
         final bwText = _formatBwLabel(bw);
         commands.add(
           _SetCommand(
-            text: 'set radio $freq $bwText $sf $cr', // lint-allow: hardcoded-string
+            // The firmware splits the four values on commas.
+            text: 'set radio $freq,$bwText,$sf,$cr', // lint-allow: hardcoded-string
             onSuccess: () {
               _initialFrequencyMHz = freq;
               _initialBandwidthKhz = bw;
@@ -639,13 +641,27 @@ class _MeshCoreRepeaterAdminSettingsScreenState
     int saved = 0;
     int timedOut = 0;
     int total = commands.length + (autoClockSyncDirty ? 1 : 0);
+    // The first reply the repeater rejected a command with, shown as is.
+    String? rejection;
+    bool rebootNeeded = false;
     try {
       for (final cmd in commands) {
         final result = await _runCliCommand(session, cmd.text);
         if (!mounted) return;
         if (result.ok) {
-          saved++;
-          cmd.onSuccess();
+          // A reply only means the repeater answered; it may say no.
+          final reply = (result.response ?? '').trim();
+          if (MeshCoreCliReplyParser.isAccepted(reply)) {
+            saved++;
+            cmd.onSuccess();
+            rebootNeeded |= MeshCoreCliReplyParser.needsReboot(reply);
+          } else {
+            AppLogging.meshcore(
+              'event=repeater_admin.set_rejected reply=$reply',
+              error: true,
+            );
+            rejection ??= reply;
+          }
         } else if (result.firmwareTimeout) {
           timedOut++;
         }
@@ -684,6 +700,23 @@ class _MeshCoreRepeaterAdminSettingsScreenState
       showErrorSnackBar(
         context,
         context.l10n.meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar(
+          saved,
+          total,
+        ),
+      );
+    } else if (rejection != null) {
+      showErrorSnackBar(
+        context,
+        context.l10n.meshcoreRepeaterAdminSettingsRejectedSnackbar(
+          saved,
+          total,
+          rejection,
+        ),
+      );
+    } else if (rebootNeeded) {
+      showSuccessSnackBar(
+        context,
+        context.l10n.meshcoreRepeaterAdminSettingsSavedRebootSnackbar(
           saved,
           total,
         ),

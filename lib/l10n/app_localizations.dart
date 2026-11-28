@@ -13310,6 +13310,22 @@ abstract class AppLocalizations {
     int total,
   );
 
+  /// Repeater admin settings: summary when the repeater answered a command with a rejection; reply is the repeater's own text, shown as is.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {saved} of {total} settings. The repeater replied: {reply}'**
+  String meshcoreRepeaterAdminSettingsRejectedSnackbar(
+    int saved,
+    int total,
+    String reply,
+  );
+
+  /// Repeater admin settings: summary when the repeater accepted radio parameters that apply after it reboots.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {saved} of {total} settings. Radio changes take effect after the repeater reboots.'**
+  String meshcoreRepeaterAdminSettingsSavedRebootSnackbar(int saved, int total);
+
   /// D49-D1 - section header for radio params
   ///
   /// In en, this message translates to:

@@ -4612,6 +4612,8 @@
   "meshcoreRepeaterAdminSettingsOutOfRange": "Значение должно быть от {min} до {max}.",
   "meshcoreRepeaterAdminSettingsOutOfRangeDecimal": "Значение должно быть от {min} до {max}.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Сохранено {saved} из {total} настроек. Часть команд истекла - сессия админа могла истечь.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "Сохранено {saved} из {total} настроек. Ответ ретранслятора: {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "Сохранено {saved} из {total} настроек. Изменения радио вступят в силу после перезагрузки ретранслятора.",
   "meshcoreRepeaterAdminSettingsSectionRadio": "Радио",
   "meshcoreRepeaterAdminSettingsSectionLocation": "Местоположение",
   "meshcoreRepeaterAdminSettingsFrequencyLabel": "Частота (МГц)",

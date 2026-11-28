@@ -8014,6 +8014,37 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String meshcoreRepeaterAdminSettingsRejectedSnackbar(
+    int saved,
+    int total,
+    String reply,
+  ) {
+    final intl.NumberFormat savedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String savedString = savedNumberFormat.format(saved);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Сохранено $savedString из $totalString настроек. Ответ ретранслятора: $reply';
+  }
+
+  @override
+  String meshcoreRepeaterAdminSettingsSavedRebootSnackbar(
+    int saved,
+    int total,
+  ) {
+    final intl.NumberFormat savedNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String savedString = savedNumberFormat.format(saved);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Сохранено $savedString из $totalString настроек. Изменения радио вступят в силу после перезагрузки ретранслятора.';
+  }
+
+  @override
   String get meshcoreRepeaterAdminSettingsSectionRadio => 'Радио';
 
   @override

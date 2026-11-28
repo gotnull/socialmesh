@@ -31195,6 +31195,8 @@
   "meshcoreRepeaterAdminSettingsOutOfRange": "O valor deve estar entre {min} e {max}.",
   "meshcoreRepeaterAdminSettingsOutOfRangeDecimal": "O valor deve estar entre {min} e {max}.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Salvou {saved} de {total} configurações. Alguns comandos expiraram - a sessão admin pode ter expirado.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "Salvou {saved} de {total} configurações. O repetidor respondeu: {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "Salvou {saved} de {total} configurações. As mudanças de rádio entram em vigor depois que o repetidor reiniciar.",
   "meshcoreRepeaterAdminSettingsSectionRadio": "Rádio",
   "meshcoreRepeaterAdminSettingsSectionLocation": "Localização",
   "meshcoreRepeaterAdminSettingsFrequencyLabel": "Frequência (MHz)",

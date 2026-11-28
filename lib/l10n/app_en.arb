@@ -10234,6 +10234,37 @@
       }
     }
   },
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "Saved {saved} of {total} settings. The repeater replied: {reply}",
+  "@meshcoreRepeaterAdminSettingsRejectedSnackbar": {
+    "description": "Repeater admin settings: summary when the repeater answered a command with a rejection; reply is the repeater's own text, shown as is.",
+    "placeholders": {
+      "saved": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "reply": {
+        "type": "String"
+      }
+    }
+  },
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "Saved {saved} of {total} settings. Radio changes take effect after the repeater reboots.",
+  "@meshcoreRepeaterAdminSettingsSavedRebootSnackbar": {
+    "description": "Repeater admin settings: summary when the repeater accepted radio parameters that apply after it reboots.",
+    "placeholders": {
+      "saved": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "meshcoreRepeaterAdminSettingsSectionRadio": "Radio",
   "@meshcoreRepeaterAdminSettingsSectionRadio": {
     "description": "D49-D1 - section header for radio params"

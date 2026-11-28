@@ -10705,6 +10705,8 @@
   "meshcoreRepeaterAdminSettingsSaveFailedSnackbar": "No se pudieron guardar los ajustes: {error}.",
   "meshcoreRepeaterAdminSettingsSavedSnackbar": "Se guardaron {saved} de {total} ajustes.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Se guardaron {saved} de {total} ajustes. Algunos comandos expiraron; la sesión de administración pudo haber caducado.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "Se guardaron {saved} de {total} ajustes. El repetidor respondió: {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "Se guardaron {saved} de {total} ajustes. Los cambios de radio se aplican cuando el repetidor se reinicia.",
   "meshcoreRepeaterAdminSettingsSectionAdvertisement": "Anuncios",
   "meshcoreRepeaterAdminSettingsSectionBehavior": "Comportamiento del repetidor",
   "meshcoreRepeaterAdminSettingsSectionIdentity": "Identidad",

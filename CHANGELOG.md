@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trace results name each hop when exactly one known repeater matches it, instead of showing only the hash.
 - Opening Trace Path from a contact's page now selects that contact.
 
+### Fixed
+
+- Saving a MeshCore repeater's frequency, bandwidth, spreading factor or coding rate from its admin settings now works. The app sent the four values separated by spaces, which repeater firmware rejects because it expects commas.
+- Repeater admin settings no longer count a setting as saved when the repeater refused it. The summary now quotes the repeater's reply, and after a radio change it says the change takes effect when the repeater reboots.
+
 ## [1.86.0] - 2026-11-28
 
 ### Added

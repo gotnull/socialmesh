@@ -10702,6 +10702,8 @@
   "meshcoreRepeaterAdminSettingsSaveFailedSnackbar": "Einstellungen konnten nicht gespeichert werden: {error}.",
   "meshcoreRepeaterAdminSettingsSavedSnackbar": "{saved} von {total} Einstellungen gespeichert.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "{saved} von {total} Einstellungen gespeichert. Einige Befehle haben das Zeitlimit überschritten - die Admin-Sitzung ist möglicherweise abgelaufen.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "{saved} von {total} Einstellungen gespeichert. Der Repeater antwortete: {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "{saved} von {total} Einstellungen gespeichert. Funkänderungen werden nach einem Neustart des Repeaters wirksam.",
   "meshcoreRepeaterAdminSettingsSectionBehavior": "Repeater-Verhalten",
   "meshcoreRepeaterAdminSettingsSectionIdentity": "Identität",
   "meshcoreRepeaterAdminSettingsSectionLocation": "Standort",

@@ -23,6 +23,46 @@ import 'package:socialmesh/l10n/app_localizations.dart';
 import 'package:socialmesh/l10n/app_localizations_en.dart';
 import 'package:socialmesh/models/meshcore_contact.dart';
 import 'package:socialmesh/providers/meshcore_providers.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_messages.dart';
+import 'package:socialmesh/services/meshcore/protocol/meshcore_session.dart';
+
+class _NullTransport implements MeshCoreTransport {
+  @override
+  Stream<Uint8List> get rawRxStream => const Stream.empty();
+
+  @override
+  Future<void> sendRaw(Uint8List data) async {}
+
+  @override
+  bool get isConnected => true;
+}
+
+// Answers CLI commands from [replies] (`> 0` for any other get) and
+// records what was sent.
+class _CliSession extends MeshCoreSession {
+  _CliSession(this.replies) : super(_NullTransport());
+
+  final Map<String, String> replies;
+  final List<String> sent = [];
+
+  @override
+  bool get isActive => true;
+
+  @override
+  Future<MeshCoreCliResult> sendCliCommand({
+    required Uint8List pubKey,
+    required String command,
+    required String prefixToken,
+    int attempt = 0,
+    int? timestampSeconds,
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    sent.add(command);
+    return MeshCoreCliResult.ok(
+      response: replies[command] ?? (command.startsWith('get ') ? '> 0' : 'OK'),
+    );
+  }
+}
 
 final _l10n = AppLocalizationsEn();
 
@@ -37,9 +77,9 @@ MeshCoreContact _contact() {
   );
 }
 
-Widget _wrap({required MeshCoreContact contact}) {
+Widget _wrap({required MeshCoreContact contact, MeshCoreSession? session}) {
   return ProviderScope(
-    overrides: [meshCoreSessionProvider.overrideWithValue(null)],
+    overrides: [meshCoreSessionProvider.overrideWithValue(session)],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -303,5 +343,92 @@ void main() {
     // (we don't probe again -- the prior snackbar may still be on
     // screen; the assertion here is that revert restored
     // _dirty=false, which the form pins via the save flow above)
+  });
+
+  group('saving radio parameters', () {
+    Future<_CliSession> changeFrequency(
+      WidgetTester tester,
+      String setReply,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      final session = _CliSession({
+        'get name': '> TestRepeater',
+        'get radio': '> 910.525,62.5,7,5',
+        'get tx': '> 22',
+        'get advert.interval': '> 120',
+        'get flood.advert.interval': '> 12',
+        'get lat': '> -37.81',
+        'get lon': '> 144.96',
+        'get repeat': '> on',
+        'get allow.read.only': '> off',
+        'get privacy': '> off',
+        'set radio 915.0,62.5,7,5': setReply,
+      });
+      await tester.pumpWidget(_wrap(contact: _contact(), session: session));
+      await _settle(tester);
+
+      await tester.tap(
+        find.byKey(
+          const ValueKey('meshcore-repeater-admin-settings-refresh-all'),
+        ),
+      );
+      for (var i = 0; i < 15; i++) {
+        await tester.pump(const Duration(milliseconds: 250));
+      }
+      // Let the refresh snackbar clear off the Save button.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 1));
+
+      final freq = find.byKey(
+        const ValueKey('meshcore-repeater-admin-settings-frequency'),
+      );
+      await tester.dragUntilVisible(
+        freq,
+        find.byType(ListView),
+        const Offset(0, -100),
+      );
+      await tester.enterText(freq, '915.0');
+      await tester.pump();
+      final save = find.byKey(
+        const ValueKey('meshcore-repeater-admin-settings-save'),
+      );
+      await tester.ensureVisible(save);
+      await tester.pump();
+      await tester.tap(save);
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 250));
+      }
+      return session;
+    }
+
+    testWidgets('sends the four values comma-separated, as the firmware '
+        'parses them', (tester) async {
+      final session = await changeFrequency(tester, 'OK - reboot to apply');
+
+      expect(session.sent, contains('set radio 915.0,62.5,7,5'));
+      expect(
+        find.text(_l10n.meshcoreRepeaterAdminSettingsSavedRebootSnackbar(1, 1)),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('a rejected command is not counted as saved', (tester) async {
+      await changeFrequency(tester, 'Error, invalid radio params');
+
+      expect(
+        find.text(
+          _l10n.meshcoreRepeaterAdminSettingsRejectedSnackbar(
+            0,
+            1,
+            'Error, invalid radio params',
+          ),
+        ),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    });
   });
 }

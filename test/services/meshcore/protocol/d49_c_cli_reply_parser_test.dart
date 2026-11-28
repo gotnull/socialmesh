@@ -214,4 +214,45 @@ void main() {
       expect(MeshCoreCliReplyParser.extractInt(''), isNull);
     });
   });
+
+  group('set replies', () {
+    test('firmware success replies are accepted', () {
+      for (final reply in [
+        'OK',
+        'OK - reboot to apply',
+        'OK - repeat is now OFF',
+        'ok',
+        ' OK ',
+        'password now: hunter2',
+      ]) {
+        expect(MeshCoreCliReplyParser.isAccepted(reply), isTrue, reason: reply);
+      }
+    });
+
+    test('firmware rejections are not', () {
+      for (final reply in [
+        'Error, invalid radio params',
+        'Error: interval range is 3-168 hours',
+        'Err - unknown region',
+        'ERROR: Power management not supported',
+        'unknown config: privacy on',
+        'Unknown command',
+        '',
+      ]) {
+        expect(
+          MeshCoreCliReplyParser.isAccepted(reply),
+          isFalse,
+          reason: reply,
+        );
+      }
+    });
+
+    test('a radio change that applies on reboot is flagged', () {
+      expect(
+        MeshCoreCliReplyParser.needsReboot('OK - reboot to apply'),
+        isTrue,
+      );
+      expect(MeshCoreCliReplyParser.needsReboot('OK'), isFalse);
+    });
+  });
 }

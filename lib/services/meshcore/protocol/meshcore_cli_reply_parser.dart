@@ -26,6 +26,21 @@
 class MeshCoreCliReplyParser {
   MeshCoreCliReplyParser._();
 
+  /// Whether the reply to a `set` or `password` command reports success.
+  /// The firmware (`CommonCLI.cpp`, `CommonRadioPrefs.cpp`) answers
+  /// success with `OK`, often with detail (`OK - reboot to apply`), or
+  /// `password now: ...`; every rejection is other text (`Error, ...`,
+  /// `Err - ...`, `unknown config: ...`).
+  static bool isAccepted(String response) {
+    final reply = response.trim().toLowerCase();
+    return reply.startsWith('ok') || reply.startsWith('password now');
+  }
+
+  /// Whether an accepted reply says the change applies only after the
+  /// repeater reboots, as `set radio` does.
+  static bool needsReboot(String response) =>
+      response.toLowerCase().contains('reboot to apply');
+
   // Extract the first usable value-portion from a CLI reply.
   //
   // Returns the trimmed substring after the first recognised

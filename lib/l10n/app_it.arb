@@ -31195,6 +31195,8 @@
   "meshcoreRepeaterAdminSettingsOutOfRange": "Il valore deve essere compreso tra {min} e {max}.",
   "meshcoreRepeaterAdminSettingsOutOfRangeDecimal": "Il valore deve essere compreso tra {min} e {max}.",
   "meshcoreRepeaterAdminSettingsSavedWithTimeoutsSnackbar": "Salvate {saved} di {total} impostazioni. Alcuni comandi sono scaduti - la sessione admin potrebbe essere scaduta.",
+  "meshcoreRepeaterAdminSettingsRejectedSnackbar": "Salvate {saved} di {total} impostazioni. Il ripetitore ha risposto: {reply}",
+  "meshcoreRepeaterAdminSettingsSavedRebootSnackbar": "Salvate {saved} di {total} impostazioni. Le modifiche radio hanno effetto dopo il riavvio del ripetitore.",
   "meshcoreRepeaterAdminSettingsSectionRadio": "Radio",
   "meshcoreRepeaterAdminSettingsSectionLocation": "Posizione",
   "meshcoreRepeaterAdminSettingsFrequencyLabel": "Frequenza (MHz)",
