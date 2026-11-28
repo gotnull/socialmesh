@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- The MeshCore QR scanner can read a contact or channel QR code from a picture in your photo library, such as a screenshot someone sent you. Tap the photo button next to the torch.
+
 ## [1.85.0] - 2026-11-26
 
 ### Changed

@@ -10537,6 +10537,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kein gültiger MeshCore-Kontakt-QR-Code';
 
   @override
+  String get meshcoreQrPickFromPhotos => 'Aus Fotos auswählen';
+
+  @override
+  String get meshcoreQrPhotoNoCodeFound =>
+      'In diesem Bild wurde kein QR-Code gefunden';
+
+  @override
+  String get meshcoreQrPhotoOpenFailed =>
+      'Ihre Fotos konnten nicht geöffnet werden';
+
+  @override
   String get meshcoreOpenChannel => 'Kanal öffnen';
 
   @override

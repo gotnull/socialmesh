@@ -10534,6 +10534,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get meshcoreNotValidContactQr => 'Недійсний QR-код контакту MeshCore';
 
   @override
+  String get meshcoreQrPickFromPhotos => 'Вибрати з фото';
+
+  @override
+  String get meshcoreQrPhotoNoCodeFound =>
+      'На цьому зображенні не знайдено QR-код';
+
+  @override
+  String get meshcoreQrPhotoOpenFailed => 'Не вдалося відкрити ваші фото';
+
+  @override
   String get meshcoreOpenChannel => 'Відкрити канал';
 
   @override
